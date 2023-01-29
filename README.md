@@ -1,2 +1,2 @@
 # WIP
-## Master Thesis 2023
+## Cybernetics and Robotics Master Thesis 2023
