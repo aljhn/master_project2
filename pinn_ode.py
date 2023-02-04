@@ -87,43 +87,30 @@ def f_loss(f):
     return jnp.mean(f**2)
 
 
-def loss(x_pred, x_true, f, beta=1):
+def loss(x_pred, x_true, f, beta=0.01):
     return u_loss(x_pred, x_true) + beta * f_loss(f)
 
 
 @jax.value_and_grad
-def train_step(params, t, x):
-    # t_boundary = jnp.expand_dims(t[0], 0)
-    # x_boundary = jnp.expand_dims(x[0], 0)
-    t_boundary = jnp.stack((t[0], t[-1]), axis=0)
-    x_boundary = jnp.stack((x[0], x[-1]), axis=0)
-    # x_pred = model_x(t, params)
+def train_step(params, t, t_boundary, x_boundary):
     x_pred = model_x(t_boundary, params)
     f = pinn(t, params)
-    # print(t_boundary)
-    # print(x_boundary)
-    # exit()
-    # print(x_pred)
-    # print(x_boundary)
-    # print(t_boundary)
-    # exit()
     return loss(x_pred, x_boundary, f)
-    return loss(x_pred, x, f)
 
 
 @jax.jit
-def train(params, opt_state, t, x):
-    loss_value, loss_grads = train_step(params, t, x)
+def train(params, opt_state, t, t_boundary, x_boundary):
+    loss_value, loss_grads = train_step(params, t, t_boundary, x_boundary)
     updates, opt_state = optimizer.update(loss_grads, opt_state, params)
     params = optax.apply_updates(params, updates)
     return loss_value, params, opt_state
 
 
 @jax.jit
-def validate(params, t, x):
-    x_pred = model_x(t, params)
+def validate(params, t, t_interior, x_interior):
+    x_pred = model_x(t_interior, params)
     f = pinn(t, params)
-    return loss(x_pred, x, f)
+    return loss(x_pred, x_interior, f)
 
 
 def plot_x():
@@ -162,22 +149,18 @@ args = None
 t_batch, x_batch = generate_data(function, None, subkey)
 t_batch = jnp.expand_dims(t_batch, 1)
 x_batch = jnp.expand_dims(x_batch, 1)
-# shuffled_indexes = np.random.permutation(t_batch.shape[0])
-shuffled_indexes = jnp.arange(t_batch.shape[0])
-train_indexes, val_indexes = data_split(shuffled_indexes)
-t_train = t_batch[train_indexes]
-t_val = t_batch[val_indexes]
-x_train = x_batch[train_indexes]
-x_val = x_batch[val_indexes]
-
+t_boundary = jnp.stack((t_batch[0], t_batch[-1]), axis=0)
+t_interior = t_batch[1:-1, :]
+x_boundary = jnp.stack((x_batch[0], x_batch[-1]), axis=0)
+x_interior = x_batch[1:-1, :]
 
 epochs = 1000
 train_losses = np.zeros(epochs)
 val_losses = np.zeros(epochs)
 for epoch in range(1, epochs + 1):
     try:
-        train_loss, params, opt_state = train(params, opt_state, t_train, x_train)
-        val_loss = validate(params, t_val, x_val)
+        train_loss, params, opt_state = train(params, opt_state, t_batch, t_boundary, x_boundary)
+        val_loss = validate(params, t_batch, t_interior, x_interior)
         train_losses[epoch - 1] = train_loss
         val_losses[epoch - 1] = val_loss
 
