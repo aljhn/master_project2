@@ -30,13 +30,6 @@ def generate_data(function, args, key):
     return t, solution.ys
 
 
-def data_split(x, ratio=0.8):
-    batch_size = x.shape[0]
-    x_train = x[:int(batch_size * ratio)]
-    x_val = x[int(batch_size * ratio):]
-    return x_train, x_val
-
-
 def model_init(model_def, key):
     subkeys = jax.random.split(key, num=(len(model_def) - 1) * 2)
     params = []
@@ -64,7 +57,7 @@ def model_forward(x, params):
         bias = params[i]["bias"]
         x = x @ weights + bias
         if i < len(params) - 1:
-            x = jax.nn.sigmoid(x)
+            x = jnp.tanh(x)
     return x
 
 
@@ -149,12 +142,8 @@ args = None
 t_batch, x_batch = generate_data(function, None, subkey)
 t_batch = jnp.expand_dims(t_batch, 1)
 x_batch = jnp.expand_dims(x_batch, 1)
-# t_boundary = jnp.stack((t_batch[0], t_batch[-1]), axis=0)
-# t_interior = t_batch[1:-1, :]
 t_boundary = jnp.array((t_batch[0],))
 t_interior = t_batch[1:, :]
-# x_boundary = jnp.stack((x_batch[0], x_batch[-1]), axis=0)
-# x_interior = x_batch[1:-1, :]
 x_boundary = jnp.array((x_batch[0],))
 x_interior = x_batch[1:, :]
 
