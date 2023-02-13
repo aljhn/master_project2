@@ -13,13 +13,13 @@ key = jax.random.PRNGKey(seed)
 
 
 def heat(t, x):
-    return jnp.sin(jnp.pi * x) * jnp.exp(-jnp.pi**2 * t)
+    return jnp.sin(jnp.pi * x) * jnp.exp(-jnp.pi**2.0 * t)
 
 
 def generate_data(function, T0, T1, X0, X1, batch_size, key):
     key1, key2, key3, key4 = jax.random.split(key, 4)
 
-    t_initial = jnp.ones((batch_size // 2, 1)) * T0
+    """t_initial = jnp.ones((batch_size // 2, 1)) * T0
     x_initial = jax.random.uniform(key1, shape=(batch_size // 2, 1), minval=X0, maxval=X1)
     u_initial = function(T0, x_initial)
 
@@ -31,7 +31,11 @@ def generate_data(function, T0, T1, X0, X1, batch_size, key):
 
     t_ib = jnp.concatenate((t_initial, t_boundary), axis=0)
     x_ib = jnp.concatenate((x_initial, x_boundary), axis=0)
-    u_ib = jnp.concatenate((u_initial, u_boundary), axis=0)
+    u_ib = jnp.concatenate((u_initial, u_boundary), axis=0)"""
+
+    t_ib = jax.random.uniform(key1, shape=(batch_size, 1), minval=T0, maxval=T1)
+    x_ib = jax.random.uniform(key2, shape=(batch_size, 1), minval=X0, maxval=X1)
+    u_ib = function(t_ib, x_ib)
 
     t_interior = jax.random.uniform(key3, shape=(batch_size, 1), minval=T0, maxval=T1)
     x_interior = jax.random.uniform(key4, shape=(batch_size, 1), minval=X0, maxval=X1)
@@ -53,10 +57,10 @@ def model_init(model_def, key):
 
 
 key, subkey = jax.random.split(key)
-model_def = [2, 100, 100, 100, 1]
+model_def = [2, 40, 40, 40, 40, 40, 40, 1]
 params = model_init(model_def, subkey)
 
-optimizer = optax.adamw(learning_rate=1e-3)
+optimizer = optax.adam(learning_rate=1e-3)
 opt_state = optimizer.init(params)
 
 def model_forward(t, x, params):
@@ -72,12 +76,13 @@ def model_forward(t, x, params):
 
 u = jax.vmap(model_forward, in_axes=(0, 0, None))
 u_t = jax.vmap(jax.jacfwd(model_forward, argnums=0), in_axes=(0, 0, None))
-u_xx = jax.vmap(jax.jacfwd(jax.jacfwd(model_forward, argnums=1), argnums=1), in_axes=(0, 0, None))
+u_xx = jax.vmap(jax.hessian(model_forward, argnums=1), in_axes=(0, 0, None))
 
 
 def pinn(t, x, params):
     f1 = u_t(t, x, params).squeeze()
-    f2 = u_xx(t, x, params).squeeze()
+    f2 = u_xx(t, x, params)
+    f2 = jnp.trace(f2, axis1=2, axis2=3).squeeze()
     f = f1 - f2
     return f
 
@@ -90,8 +95,9 @@ def f_loss(f):
     return jnp.mean(f**2)
 
 
-def loss(u_pred, u_true, f, beta=0.001):
-    return u_loss(u_pred, u_true) + beta * f_loss(f)
+def loss(u_pred, u_true, f, beta=1e-5):
+    return u_loss(u_pred, u_true)# + beta * f_loss(f)
+    # return beta * f_loss(f)
 
 
 @jax.value_and_grad
@@ -117,7 +123,7 @@ def validate(params, t_interior, x_interior, u_interior, t_f, x_f):
 
 
 def plot_u():
-    n = 20
+    n = 50
     t = np.linspace(T0, T1, n)
     x = np.linspace(X0, X1, n)
     tt = np.zeros((n * n, 1))
@@ -132,8 +138,8 @@ def plot_u():
     un = np.zeros((n, n))
     for i in range(n):
         for j in range(n):
-            un[j, i] = uu[i * n + j]
-            # un[j, i] = uu_true[i * n + j]
+            # un[j, i] = uu[i * n + j]
+            un[j, i] = uu_true[i * n + j]
     plt.figure()
     plt.pcolormesh(t, x, un)
     plt.colorbar()
@@ -161,10 +167,10 @@ T0 = 0.0
 T1 = 0.2
 X0 = 0.0
 X1 = 1.0
-batch_size = 100
+batch_size = 400
 key, subkey = jax.random.split(key)
 t_ib, x_ib, u_ib, t_interior, x_interior, u_interior = generate_data(function, T0, T1, X0, X1, batch_size, subkey)
-n_f = 10000
+n_f = 1000
 t_f = jnp.expand_dims(jnp.linspace(T0, T1, n_f), 1)
 x_f = jnp.expand_dims(jnp.linspace(X0, X1, n_f), 1)
 
@@ -179,16 +185,15 @@ for epoch in range(1, epochs + 1):
         val_losses[epoch - 1] = val_loss
 
         print(f"Epoch: {epoch:3d}, Train Loss: {train_loss.item():.5f}, Val Loss: {val_loss.item():.5f}")
-        # print(f"Epoch: {epoch:3d}, Train Loss: {train_loss.item():.5f}")
     except KeyboardInterrupt:
         break
 
-plt.figure()
-plt.scatter(x_ib[:batch_size//2, :], u_ib[:batch_size//2, :])
-uu_ib = u(t_ib[:batch_size//2, :], x_ib[:batch_size//2, :], params)
-plt.scatter(x_ib[:batch_size//2, :], uu_ib[:batch_size//2, :])
-plt.show()
+# plt.figure()
+# plt.scatter(x_ib[:batch_size//2, :], u_ib[:batch_size//2, :])
+# uu_ib = u(t_ib[:batch_size//2, :], x_ib[:batch_size//2, :], params)
+# plt.scatter(x_ib[:batch_size//2, :], uu_ib[:batch_size//2, :])
+# plt.show()
 
-plot_loss(train_losses, val_losses)
+# plot_loss(train_losses, val_losses)
 plot_u()
 
