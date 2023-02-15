@@ -77,7 +77,7 @@ for epoch in range(1, epochs + 1):
         u_x = u_jacobian[:, 1]
         u_xx = model_hessian(tx_pinn)[:, 1, 1]
         f = u_t + u * u_x - 0.01 / 3.14 * u_xx
-        loss += 1.0 * torch.mean(f**2)
+        loss += 0.1 * torch.mean(f**2)
 
         loss.backward()
         optimizer.step()
