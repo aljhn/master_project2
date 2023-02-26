@@ -33,8 +33,10 @@ x_true = x_true[:, 0, :]
 t_initial = t_true[::100, :]
 x_initial = x_true[::100, 0].unsqueeze(1)
 
-n_pinn = 1000
+n_pinn = 100
 t_pinn = torch.linspace(0.0, 20.0, n_pinn).unsqueeze(1)
+# t_pinn = torch.rand((n_pinn, 1)) * 20.0
+t_pinn.requires_grad = True
 
 model = nn.Sequential(
     nn.Linear(1, 50),
@@ -51,21 +53,25 @@ model = nn.Sequential(
 )
 
 criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=5e-3)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-model_jacobian = functorch.vmap(functorch.jacfwd(lambda x: model(x).squeeze()))
-model_hessian = functorch.vmap(functorch.hessian(lambda x: model(x).squeeze()))
+# model_jacobian = functorch.vmap(functorch.jacfwd(lambda x: model(x).squeeze()))
+# model_hessian = functorch.vmap(functorch.hessian(lambda x: model(x).squeeze()))
 
-epochs = 1000
+epochs = 10000
 for epoch in range(1, epochs + 1):
     try:
         optimizer.zero_grad()
         x_pred = model(t_initial)
         loss = criterion(x_pred, x_initial)
 
-        x_pinn = model(t_pinn)[:, 0]
-        dx_pinn = model_jacobian(t_pinn)[:, 0]
-        ddx_pinn = model_hessian(t_pinn)[:, 0, 0]
+        # x_pinn = model(t_pinn)[:, 0]
+        # dx_pinn = model_jacobian(t_pinn)[:, 0]
+        # ddx_pinn = model_hessian(t_pinn)[:, 0, 0]
+
+        x_pinn = model(t_pinn)
+        dx_pinn = torch.autograd.grad(x_pinn, t_pinn, grad_outputs=torch.ones_like(x_pinn), retain_graph=True, create_graph=True)[0]
+        ddx_pinn = torch.autograd.grad(dx_pinn, t_pinn, grad_outputs=torch.ones_like(dx_pinn), retain_graph=True, create_graph=True)[0]
         f = ddx_pinn - (mu * (1.0 - (x_pinn**2.0)) * dx_pinn - x_pinn)
         loss += 0.1 * torch.mean(f**2)
 
@@ -81,7 +87,10 @@ with torch.no_grad():
     plt.figure()
     plt.plot(t_true, x_true[:, 0])
     plt.plot(t_true, x[:, 0])
+    plt.scatter(t_initial, x_initial)
     plt.xlabel(r"$t$")
     plt.ylabel(r"$x(t)$")
     plt.legend(["True system", "Learned system"])
+    plt.title("Van der Pol Oscillator")
+    plt.savefig("vdp.pdf")
     plt.show()

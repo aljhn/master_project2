@@ -35,6 +35,7 @@ x_initial = x_true[::100, :]
 
 n_pinn = 1000
 t_pinn = torch.linspace(0.0, 20.0, n_pinn).unsqueeze(1)
+# t_pinn = torch.rand((n_pinn, 1)) * 20.0
 
 model = nn.Sequential(
     nn.Linear(1, 50),
@@ -51,11 +52,11 @@ model = nn.Sequential(
 )
 
 criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=5e-3)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
 model_jacobian = functorch.vmap(functorch.jacfwd(lambda x: model(x).squeeze()))
 
-epochs = 1000
+epochs = 10000
 for epoch in range(1, epochs + 1):
     try:
         optimizer.zero_grad()
@@ -81,7 +82,9 @@ with torch.no_grad():
     plt.figure()
     plt.plot(t_true, x_true[:, 0])
     plt.plot(t_true, x[:, 0])
+    plt.scatter(t_initial, x_initial[:, 0])
     plt.xlabel(r"$t$")
     plt.ylabel(r"$x(t)$")
     plt.legend(["True system", "Learned system"])
+    plt.title("Van der Pol Oscillator")
     plt.show()

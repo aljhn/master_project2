@@ -26,6 +26,7 @@ x_true = x_true[:, 0, :]
 
 n_pinn = 1000
 t_pinn = torch.linspace(0.0, 10.0, n_pinn).unsqueeze(1)
+t_pinn.requires_grad = True
 
 
 model = nn.Sequential(
@@ -42,17 +43,19 @@ model = nn.Sequential(
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
-model_jacobian = functorch.vmap(functorch.grad(lambda x: model(x).squeeze()))
+# model_jacobian = functorch.vmap(functorch.grad(lambda x: model(x).squeeze()))
 
 epochs = 1000
 for epoch in range(1, epochs + 1):
     try:
         optimizer.zero_grad()
+
         x_pred = model(t_initial)
         loss = criterion(x_pred, x_initial)
 
         x_pinn = model(t_pinn)
-        dx_pinn = model_jacobian(t_pinn)
+        # dx_pinn = model_jacobian(t_pinn)
+        dx_pinn = torch.autograd.grad(x_pinn, t_pinn, grad_outputs=torch.ones_like(x_pinn), retain_graph=True, create_graph=True)[0]
         f = dx_pinn - (x_pinn**2) + t_pinn
         loss += 0.1 * torch.mean(f**2)
 
@@ -71,4 +74,6 @@ with torch.no_grad():
     plt.xlabel(r"$t$")
     plt.ylabel(r"$x(t)$")
     plt.legend(["True system", "Learned system"])
+    plt.title("Riccati Equation")
+    plt.savefig("riccati.pdf")
     plt.show()
