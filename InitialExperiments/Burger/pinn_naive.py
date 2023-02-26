@@ -103,8 +103,12 @@ with torch.no_grad():
         for j in range(n):
             un[j, i] = uu[i * n + j]
     plt.figure()
-    plt.pcolormesh(t, x, un, vmin=-1.0, vmax=1.0)
+    plt.pcolormesh(t, x, un, vmin=-1.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.title(r"$u(t, x)$")
+    plt.xlabel(r"$t$")
+    plt.ylabel(r"$x$")
+    plt.savefig("burger_naive.pdf")
     plt.show()
 
     plt.figure()
@@ -137,4 +141,5 @@ with torch.no_grad():
     plt.xlim([X0, X1])
     plt.ylim([-1, 1])
     plt.tight_layout()
+    plt.savefig("burger_slice_naive.pdf")
     plt.show()

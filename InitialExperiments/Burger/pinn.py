@@ -121,7 +121,7 @@ while True:
 
 
 with torch.no_grad():
-    n = 1000
+    n = 100
     t = torch.linspace(T0, T1, n)
     x = torch.linspace(X0, X1, n)
     tt, xx = torch.meshgrid(t, x, indexing="xy")
@@ -131,6 +131,10 @@ with torch.no_grad():
     plt.figure()
     plt.pcolormesh(t, x, un, vmin=-1.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.title(r"$u(t, x)$")
+    plt.xlabel(r"$t$")
+    plt.ylabel(r"$x$")
+    plt.savefig("burger.pdf")
     plt.show()
 
     plt.figure()
@@ -163,4 +167,5 @@ with torch.no_grad():
     plt.xlim([X0, X1])
     plt.ylim([-1, 1])
     plt.tight_layout()
+    plt.savefig("burger_slice.pdf")
     plt.show()

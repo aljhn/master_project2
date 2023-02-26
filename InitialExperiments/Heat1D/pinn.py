@@ -99,6 +99,10 @@ with torch.no_grad():
             un[j, i] = uu[i * n + j]
             # un[j, i] = uu_true[i * n + j]
     plt.figure()
-    plt.pcolormesh(t, x, un, vmin=0.0, vmax=1.0)
+    plt.pcolormesh(t, x, un, vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.xlabel(r"$t$")
+    plt.ylabel(r"$x$")
+    plt.title(r"$u(t, x)$")
+    plt.savefig("heat1d.pdf")
     plt.show()
