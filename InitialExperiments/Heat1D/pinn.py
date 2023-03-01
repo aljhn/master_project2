@@ -50,8 +50,8 @@ tx_ib = torch.cat((tx_i, tx_b), dim=0)
 u_ib = torch.cat((u_i, u_b), dim=0)
 
 n_pinn = 1000
-t_pinn = torch.linspace(0.0, 0.2, n_pinn)
-x_pinn = torch.linspace(0.0, 1.0, n_pinn)
+t_pinn = torch.rand(n_pinn) * (T1 - T0) + T0
+x_pinn = torch.rand(n_pinn) * (X1 - X0) + X0
 tx_pinn = torch.stack((t_pinn, x_pinn), dim=1)
 
 criterion = nn.MSELoss()
