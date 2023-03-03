@@ -118,6 +118,7 @@ for epoch in range(1, epochs + 1):
 
 with torch.no_grad():
     plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["font.size"] = 14
 
     x1 = model1(t_true)
     x2 = model2(t_true)

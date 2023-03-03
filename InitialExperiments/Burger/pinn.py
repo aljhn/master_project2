@@ -121,6 +121,7 @@ while True:
 
 with torch.no_grad():
     plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["font.size"] = 14
 
     n = 100
     t = torch.linspace(T0, T1, n)

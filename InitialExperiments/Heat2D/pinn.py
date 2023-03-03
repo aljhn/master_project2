@@ -88,6 +88,7 @@ for epoch in range(1, epochs + 1):
 
 with torch.no_grad():
     plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["font.size"] = 14
 
     n = 100
     t = torch.linspace(T0, T1, n)
@@ -103,53 +104,69 @@ with torch.no_grad():
 
     plt.figure()
     print(T0)
-    plt.pcolormesh(x, y, un[0, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.pcolormesh(x, y, un[:, 0, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.xlabel(r"$x$")
+    plt.xlabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_1.pdf")
 
     plt.figure()
     print((T1 - T0) / 3)
-    plt.pcolormesh(x, y, un[n // 3 - 1, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.pcolormesh(x, y, un[:, n // 3 - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.xlabel(r"$x$")
+    plt.xlabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_2.pdf")
 
     plt.figure()
     print((T1 - T0) * 2 / 3)
-    plt.pcolormesh(x, y, un[n * 2 // 3 - 1, :, ], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.pcolormesh(x, y, un[:, n * 2 // 3 - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.xlabel(r"$x$")
+    plt.xlabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_3.pdf")
 
     plt.figure()
     print(T1)
-    plt.pcolormesh(x, y, un[n - 1, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.pcolormesh(x, y, un[:, n - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.xlabel(r"$x$")
+    plt.xlabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_4.pdf")
 
 
     plt.figure()
-    plt.pcolormesh(x, y, uu_true[0, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.pcolormesh(x, y, uu_true[:, 0, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.xlabel(r"$x$")
+    plt.xlabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_1_true.pdf")
 
     plt.figure()
-    plt.pcolormesh(x, y, uu_true[n // 3 - 1, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.pcolormesh(x, y, uu_true[:, n // 3 - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.xlabel(r"$x$")
+    plt.xlabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_2_true.pdf")
 
     plt.figure()
-    plt.pcolormesh(x, y, uu_true[n * 2 // 3 - 1, :, ], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.pcolormesh(x, y, uu_true[:, n * 2 // 3 - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.xlabel(r"$x$")
+    plt.xlabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_3_true.pdf")
 
     plt.figure()
-    plt.pcolormesh(x, y, uu_true[n - 1, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.pcolormesh(x, y, uu_true[:, n - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
+    plt.xlabel(r"$x$")
+    plt.xlabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_4_true.pdf")
