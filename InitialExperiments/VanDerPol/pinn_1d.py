@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
-import functorch
 import torchdiffeq
 
 
@@ -22,52 +21,67 @@ def vanderpol(t, x):
     return torch.stack((dx1, dx2), dim=0)
 
 
-t_initial = torch.tensor([[0.0]])
+T0 = 0.0
+T1 = 20.0
+t_initial = torch.tensor([[T0]])
 x_initial = torch.rand((1, 2)) * 5.0 - 5.0
 
-t_true = torch.linspace(0, 20, 1000)
+t_true = torch.linspace(T0, T1, 1000)
 x_true = torchdiffeq.odeint(vanderpol, x_initial, t_true)
 t_true = t_true.unsqueeze(1)
-x_true = x_true[:, 0, :]
+x_true = x_true[:, 0, 0].unsqueeze(1)
 
-t_initial = t_true[::100, :]
-x_initial = x_true[::100, 0].unsqueeze(1)
+t_data = t_true[::100, :]
+x_data = x_true[::100, :]
 
 n_pinn = 100
-t_pinn = torch.linspace(0.0, 20.0, n_pinn).unsqueeze(1)
-# t_pinn = torch.rand((n_pinn, 1)) * 20.0
+t_pinn = torch.rand((n_pinn, 1)) * (T1 - T0) + T0
 t_pinn.requires_grad = True
 
+model_reg = nn.Sequential(
+    nn.Linear(1, 20),
+    nn.Tanh(),
+    nn.Linear(20, 20),
+    nn.Tanh(),
+    nn.Linear(20, 20),
+    nn.Tanh(),
+    nn.Linear(20, 20),
+    nn.Tanh(),
+    nn.Linear(20, 20),
+    nn.Tanh(),
+    nn.Linear(20, 1)
+)
+
 model = nn.Sequential(
-    nn.Linear(1, 50),
+    nn.Linear(1, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 1)
+    nn.Linear(20, 1)
 )
 
 criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-
-# model_jacobian = functorch.vmap(functorch.jacfwd(lambda x: model(x).squeeze()))
-# model_hessian = functorch.vmap(functorch.hessian(lambda x: model(x).squeeze()))
+optimizer_reg = torch.optim.Adam(model_reg.parameters(), lr=1e-3)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
 epochs = 10000
 for epoch in range(1, epochs + 1):
     try:
-        optimizer.zero_grad()
-        x_pred = model(t_initial)
-        loss = criterion(x_pred, x_initial)
+        optimizer_reg.zero_grad()
+        x_pred = model_reg(t_data)
+        loss_reg = criterion(x_pred, x_data)
+        loss_reg.backward()
+        optimizer_reg.step()
 
-        # x_pinn = model(t_pinn)[:, 0]
-        # dx_pinn = model_jacobian(t_pinn)[:, 0]
-        # ddx_pinn = model_hessian(t_pinn)[:, 0, 0]
+        optimizer.zero_grad()
+        x_pred = model(t_data)
+        loss = criterion(x_pred, x_data)
 
         x_pinn = model(t_pinn)
         dx_pinn = torch.autograd.grad(x_pinn, t_pinn, grad_outputs=torch.ones_like(x_pinn), retain_graph=True, create_graph=True)[0]
@@ -83,14 +97,18 @@ for epoch in range(1, epochs + 1):
 
 
 with torch.no_grad():
+    plt.rcParams["font.family"] = "Times New Roman"
+
+    x_reg = model_reg(t_true)
     x = model(t_true)
     plt.figure()
-    plt.plot(t_true, x_true[:, 0])
-    plt.plot(t_true, x[:, 0])
-    plt.scatter(t_initial, x_initial)
+    plt.plot(t_true, x_true)
+    plt.plot(t_true, x_reg)
+    plt.plot(t_true, x)
+    plt.scatter(t_data, x_data)
     plt.xlabel(r"$t$")
     plt.ylabel(r"$x(t)$")
-    plt.legend(["True system", "Learned system"])
-    plt.title("Van der Pol Oscillator")
+    plt.legend(["True Output", "Neural Network Output", "PINN Output"])
+    plt.tight_layout()
     plt.savefig("vdp.pdf")
     plt.show()

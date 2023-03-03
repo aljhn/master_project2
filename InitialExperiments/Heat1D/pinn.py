@@ -1,10 +1,11 @@
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import functorch
 
-import random
+
 seed = 42069
 random.seed(seed)
 np.random.seed(seed)
@@ -12,24 +13,24 @@ torch.manual_seed(seed)
 
 
 def heat(t, x):
-    return torch.sin(3.14 * x) * torch.exp(-(3.14**2.0) * t)
+    return torch.sin(np.pi * x) * torch.exp(-(np.pi**2.0) * t)
 
 
 model = nn.Sequential(
-    nn.Linear(2, 50),
+    nn.Linear(2, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 1)
+    nn.Linear(20, 1)
 )
 
-batch_size = 400
+batch_size = 100
 
 T0 = 0.0
 T1 = 0.2
@@ -80,29 +81,33 @@ for epoch in range(1, epochs + 1):
 
 
 with torch.no_grad():
-    n = 50
+    plt.rcParams["font.family"] = "Times New Roman"
+
+    n = 100
     t = torch.linspace(T0, T1, n)
     x = torch.linspace(X0, X1, n)
-    tt = torch.zeros((n * n, 1))
-    xx = torch.zeros((n * n, 1))
-    for i in range(n):
-        for j in range(n):
-            tt[i * n + j, 0] = t[i]
-            xx[i * n + j, 0] = x[j]
-    ttxx = torch.cat((tt, xx), dim=1)
+    tt, xx = torch.meshgrid(t, x, indexing="xy")
+    ttxx = torch.stack((tt.flatten(), xx.flatten()), dim=1)
     uu = model(ttxx)
+    un = torch.reshape(uu, tt.shape)
     uu_true = heat(tt, xx)
-    print("True difference:", torch.mean((uu - uu_true)**2))
-    un = torch.zeros((n, n))
-    for i in range(n):
-        for j in range(n):
-            un[j, i] = uu[i * n + j]
-            # un[j, i] = uu_true[i * n + j]
+
+    print("True difference:", torch.mean((un - uu_true)**2))
+
     plt.figure()
     plt.pcolormesh(t, x, un, vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$t$")
     plt.ylabel(r"$x$")
-    plt.title(r"$u(t, x)$")
+    plt.tight_layout()
     plt.savefig("heat1d.pdf")
+    plt.show()
+
+    plt.figure()
+    plt.pcolormesh(t, x, uu_true, vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.colorbar()
+    plt.xlabel(r"$t$")
+    plt.ylabel(r"$x$")
+    plt.tight_layout()
+    plt.savefig("heat1d_true.pdf")
     plt.show()

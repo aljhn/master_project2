@@ -1,10 +1,11 @@
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import functorch
 
-import random
+
 seed = 42069
 random.seed(seed)
 np.random.seed(seed)
@@ -16,20 +17,20 @@ def heat(t, x, y):
 
 
 model = nn.Sequential(
-    nn.Linear(3, 50),
+    nn.Linear(3, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 50),
+    nn.Linear(20, 20),
     nn.Tanh(),
-    nn.Linear(50, 1)
+    nn.Linear(20, 1)
 )
 
-batch_size = 400
+batch_size = 100
 
 T0 = 0.0
 T1 = 0.2
@@ -53,7 +54,7 @@ u_b = heat(t_b, x_b, y_b)
 txy_ib = torch.cat((txy_i, txy_b), dim=0)
 u_ib = torch.cat((u_i, u_b), dim=0)
 
-n_pinn = 1000
+n_pinn = 10000
 t_pinn = torch.rand(n_pinn) * (T1 - T0) + T0
 x_pinn = torch.rand(n_pinn) * (X1 - X0) + X0
 y_pinn = torch.rand(n_pinn) * (Y1 - Y0) + Y0
@@ -86,48 +87,69 @@ for epoch in range(1, epochs + 1):
 
 
 with torch.no_grad():
-    n = 60
+    plt.rcParams["font.family"] = "Times New Roman"
+
+    n = 100
     t = torch.linspace(T0, T1, n)
     x = torch.linspace(X0, X1, n)
     y = torch.linspace(Y0, Y1, n)
-    tt = torch.zeros((n * n * n, 1))
-    xx = torch.zeros((n * n * n, 1))
-    yy = torch.zeros((n * n * n, 1))
-    for i in range(n):
-        for j in range(n):
-            for k in range(n):
-                tt[i * n * n + j * n + k, 0] = t[i]
-                xx[i * n * n + j * n + k, 0] = x[j]
-                yy[i * n * n + j * n + k, 0] = y[k]
-    ttxxyy = torch.cat((tt, xx, yy), dim=1)
+    tt, xx, yy = torch.meshgrid(t, x, y, indexing="xy")
+    ttxxyy = torch.stack((tt.flatten(), xx.flatten(), yy.flatten()), dim=1)
     uu = model(ttxxyy)
+    un = torch.reshape(uu, tt.shape)
     uu_true = heat(tt, xx, yy)
-    print("True difference:", torch.mean((uu - uu_true)**2))
-    un = torch.zeros((n, n, n))
-    for i in range(n):
-        for j in range(n):
-            for k in range(n):
-                un[i, j, k] = uu[i * n * n + j * n + k]
-                # un[i, j, k] = uu_true[i * n * n + j * n + k]
+
+    print("True difference:", torch.mean((un - uu_true)**2))
 
     plt.figure()
-    plt.suptitle(r"$u(t, x, y)$")
-    plt.subplot(2, 2, 1)
-    plt.title(f"t={T0:.2f}")
+    print(T0)
     plt.pcolormesh(x, y, un[0, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
-    plt.subplot(2, 2, 2)
-    plt.title(f"t={(T1 - T0) / 3:.2f}")
+    plt.tight_layout()
+    plt.savefig("heat2d_1.pdf")
+
+    plt.figure()
+    print((T1 - T0) / 3)
     plt.pcolormesh(x, y, un[n // 3 - 1, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
-    plt.subplot(2, 2, 3)
-    plt.title(f"t={(T1 - T0) * 2 / 3:.2f}")
+    plt.tight_layout()
+    plt.savefig("heat2d_2.pdf")
+
+    plt.figure()
+    print((T1 - T0) * 2 / 3)
     plt.pcolormesh(x, y, un[n * 2 // 3 - 1, :, ], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
-    plt.subplot(2, 2, 4)
-    plt.title(f"t={T1:.2f}")
+    plt.tight_layout()
+    plt.savefig("heat2d_3.pdf")
+
+    plt.figure()
+    print(T1)
     plt.pcolormesh(x, y, un[n - 1, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.tight_layout()
-    plt.savefig("heat2d.pdf")
-    plt.show()
+    plt.savefig("heat2d_4.pdf")
+
+
+    plt.figure()
+    plt.pcolormesh(x, y, uu_true[0, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.colorbar()
+    plt.tight_layout()
+    plt.savefig("heat2d_1_true.pdf")
+
+    plt.figure()
+    plt.pcolormesh(x, y, uu_true[n // 3 - 1, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.colorbar()
+    plt.tight_layout()
+    plt.savefig("heat2d_2_true.pdf")
+
+    plt.figure()
+    plt.pcolormesh(x, y, uu_true[n * 2 // 3 - 1, :, ], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.colorbar()
+    plt.tight_layout()
+    plt.savefig("heat2d_3_true.pdf")
+
+    plt.figure()
+    plt.pcolormesh(x, y, uu_true[n - 1, :, :], vmin=0.0, vmax=1.0, cmap="rainbow")
+    plt.colorbar()
+    plt.tight_layout()
+    plt.savefig("heat2d_4_true.pdf")

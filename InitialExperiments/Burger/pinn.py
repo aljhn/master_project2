@@ -1,10 +1,11 @@
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import functorch
 
-import random
+
 seed = 42069
 random.seed(seed)
 np.random.seed(seed)
@@ -60,8 +61,6 @@ tx_ib = torch.cat((tx_i, tx_b), dim=0)
 u_ib = torch.cat((u_i, u_b), dim=0)
 
 n_pinn = 10000
-# t_pinn = torch.linspace(T0, T1, n_pinn)
-# x_pinn = torch.linspace(X0, X1, n_pinn)
 t_pinn = torch.rand(n_pinn) * (T1 - T0) + T0
 x_pinn = torch.rand(n_pinn) * (X1 - X0) + X0
 tx_pinn = torch.stack((t_pinn, x_pinn), dim=1)
@@ -104,7 +103,7 @@ def closure():
     # u_xx = u_x_grad[:, 1]
 
     f = u_t + u * u_x - nu * u_xx
-    loss += torch.mean(f**2)
+    loss += 0.1 * torch.mean(f**2)
 
     loss.backward()
 
@@ -121,6 +120,8 @@ while True:
 
 
 with torch.no_grad():
+    plt.rcParams["font.family"] = "Times New Roman"
+
     n = 100
     t = torch.linspace(T0, T1, n)
     x = torch.linspace(X0, X1, n)
@@ -131,41 +132,48 @@ with torch.no_grad():
     plt.figure()
     plt.pcolormesh(t, x, un, vmin=-1.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
-    plt.title(r"$u(t, x)$")
     plt.xlabel(r"$t$")
     plt.ylabel(r"$x$")
+    plt.tight_layout()
     plt.savefig("burger.pdf")
     plt.show()
 
     plt.figure()
-    plt.subplot(2, 2, 1)
-    plt.title(f"t={T0:.2f}")
+    print(T0)
     plt.plot(x, un[:, 0])
     plt.xlabel(r"$x$")
     plt.ylabel(r"$u(t, x)$")
     plt.xlim([X0, X1])
     plt.ylim([-1, 1])
-    plt.subplot(2, 2, 2)
-    plt.title(f"t={(T1 - T0) / 3:.2f}")
+    plt.tight_layout()
+    plt.savefig("burger_slice1.pdf")
+
+    plt.figure()
+    print((T1 - T0) / 3)
     plt.plot(x, un[:, n // 3 - 1])
     plt.xlabel(r"$x$")
     plt.ylabel(r"$u(t, x)$")
     plt.xlim([X0, X1])
     plt.ylim([-1, 1])
-    plt.subplot(2, 2, 3)
-    plt.title(f"t={(T1 - T0) * 2 / 3:.2f}")
+    plt.tight_layout()
+    plt.savefig("burger_slice2.pdf")
+
+    plt.figure()
+    print((T1 - T0) * 2 / 3)
     plt.plot(x, un[:, n * 2 // 3 - 1])
     plt.xlabel(r"$x$")
     plt.ylabel(r"$u(t, x)$")
     plt.xlim([X0, X1])
     plt.ylim([-1, 1])
-    plt.subplot(2, 2, 4)
-    plt.title(f"t={T1:.2f}")
+    plt.tight_layout()
+    plt.savefig("burger_slice3.pdf")
+
+    plt.figure()
+    print(T1)
     plt.plot(x, un[:, n - 1])
     plt.xlabel(r"$x$")
     plt.ylabel(r"$u(t, x)$")
     plt.xlim([X0, X1])
     plt.ylim([-1, 1])
     plt.tight_layout()
-    plt.savefig("burger_slice.pdf")
-    plt.show()
+    plt.savefig("burger_slice4.pdf")
