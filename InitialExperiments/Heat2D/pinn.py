@@ -12,8 +12,8 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 
 
-def heat(t, x, y):
-    return torch.sin(3.14 * x) * torch.sin(3.14 * y) * torch.exp(-(3.14**2.0) * t)
+def heat(t, x, y, k=1.0):
+    return torch.sin(np.pi * x) * torch.sin(np.pi * y) * torch.exp(-((k * np.pi)**2.0) * 2 * t)
 
 
 model = nn.Sequential(
