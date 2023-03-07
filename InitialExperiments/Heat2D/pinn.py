@@ -77,7 +77,7 @@ for epoch in range(1, epochs + 1):
         u_hessian = model_hessian(txy_pinn)[:, 1:, 1:]
         u_nabla = functorch.vmap(torch.trace)(u_hessian)
         f = u_t - u_nabla
-        loss += 0.1 * torch.mean(f**2)
+        loss += 0.001 * torch.mean(f**2)
 
         loss.backward()
         optimizer.step()
@@ -107,7 +107,7 @@ with torch.no_grad():
     plt.pcolormesh(x, y, un[:, 0, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$x$")
-    plt.xlabel(r"$y$")
+    plt.ylabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_1.pdf")
 
@@ -116,7 +116,7 @@ with torch.no_grad():
     plt.pcolormesh(x, y, un[:, n // 3 - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$x$")
-    plt.xlabel(r"$y$")
+    plt.ylabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_2.pdf")
 
@@ -125,7 +125,7 @@ with torch.no_grad():
     plt.pcolormesh(x, y, un[:, n * 2 // 3 - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$x$")
-    plt.xlabel(r"$y$")
+    plt.ylabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_3.pdf")
 
@@ -134,7 +134,7 @@ with torch.no_grad():
     plt.pcolormesh(x, y, un[:, n - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$x$")
-    plt.xlabel(r"$y$")
+    plt.ylabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_4.pdf")
 
@@ -143,7 +143,7 @@ with torch.no_grad():
     plt.pcolormesh(x, y, uu_true[:, 0, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$x$")
-    plt.xlabel(r"$y$")
+    plt.ylabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_1_true.pdf")
 
@@ -151,7 +151,7 @@ with torch.no_grad():
     plt.pcolormesh(x, y, uu_true[:, n // 3 - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$x$")
-    plt.xlabel(r"$y$")
+    plt.ylabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_2_true.pdf")
 
@@ -159,7 +159,7 @@ with torch.no_grad():
     plt.pcolormesh(x, y, uu_true[:, n * 2 // 3 - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$x$")
-    plt.xlabel(r"$y$")
+    plt.ylabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_3_true.pdf")
 
@@ -167,6 +167,6 @@ with torch.no_grad():
     plt.pcolormesh(x, y, uu_true[:, n - 1, :], vmin=0.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$x$")
-    plt.xlabel(r"$y$")
+    plt.ylabel(r"$y$")
     plt.tight_layout()
     plt.savefig("heat2d_4_true.pdf")
