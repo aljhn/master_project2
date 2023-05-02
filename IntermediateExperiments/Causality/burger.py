@@ -81,7 +81,7 @@ x_i = torch.rand((n_i, 1)) * (X1 - X0) + X0
 u_i = initial_condition(x_i)
 tx_i = torch.cat((t_i, x_i), dim=1)
 
-n_pinn = 1000
+n_pinn = 2000
 
 n_t = 10
 
@@ -147,7 +147,7 @@ def closure():
     loss = torch.mean(loss_weightings * losses)
     loss.backward()
 
-    print(f"Time: {T0_now:.3f}, Epoch: {epoch:5d}, Epsilon: {epsilon:.3f}, Loss: {loss.item():.6f}")
+    print(f"Time march: {int((T_now - T0) / delta_T) + 1}/{T_iterations}, Epoch: {epoch:5d}, Epsilon: {epsilon:.3f}, Loss: {loss.item():.6f}")
 
     if torch.min(loss_weightings[1:]) > delta:
         raise KeyboardInterrupt
