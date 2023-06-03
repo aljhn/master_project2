@@ -59,14 +59,12 @@ def initial_condition(x):
 T0 = 0.0
 T1 = 1.0
 T_iterations = 10
-delta_T = T1 / T_iterations
-T_now = T0
+delta_T = (T1 - T0) / T_iterations
 X0 = -1.0
 X1 = 1.0
 
-# input_dim = 2
 output_dim = 1
-hidden_dim = 40
+hidden_dim = 50
 layers = 5
 L = X1 - X0
 m = 5
@@ -78,9 +76,7 @@ def fourier_embedding(x):
     embedding = torch.cat((torch.ones_like(x, device=device), torch.cos(x @ fourier_omegas), torch.sin(x @ fourier_omegas)), dim=1)
     return embedding
 
-alpha = 5
-beta = 0.5
-gamma = 0.005
+nu = 0.01 / np.pi
 
 n_i = 1000
 
@@ -88,18 +84,17 @@ t_i = torch.ones((n_i, 1), device=device) * T0
 x_i = torch.rand((n_i, 1), device=device) * (X1 - X0) + X0
 tx_i = torch.cat((t_i, x_i), dim=1)
 
-t_ii = torch.ones((n_i, 1), device=device) * (T_now + delta_T)
-tx_ii = torch.cat((t_i, x_i), dim=1)
+t_ii = torch.ones((n_i, 1), device=device) * (T0 + delta_T)
+tx_ii = torch.cat((t_ii, x_i), dim=1)
 
-n_pinn = 1000
+n_t = 20
+n_x = 500
 
-n_t = 10
+weighting_matrix = torch.triu(torch.ones((n_t, n_t), device=device), diagonal=1).T
 
 criterion = nn.MSELoss()
 
 max_epochs = 1000
-epoch = 0
-
 
 beta_i = 1e3
 beta_f = 1.0
@@ -111,60 +106,42 @@ i_losses = []
 f_losses = []
 
 def closure():
-    global epoch
-    epoch += 1
-
-    if epoch > max_epochs:
-        raise KeyboardInterrupt
-
     optimizer.zero_grad()
-
-    loss_weightings = torch.ones(n_t, device=device)
-    losses = torch.zeros(n_t, device=device)
 
     u_pred = model(tx_i)
     initial_loss = criterion(u_pred, u_i)
-    losses[0] = beta_i * initial_loss
+    losses_0 = beta_i * initial_loss
 
-    loss_sum = losses[0]
+    t_pinn = torch.rand((n_t,), device=device) * (T1 - T0) + T0
+    t_pinn, _ = torch.sort(t_pinn)
+    x_pinn = torch.rand((n_x,), device=device) * (X1 - X0) + X0
+    tt_pinn, xx_pinn = torch.meshgrid((t_pinn, x_pinn), indexing="xy")
+    tx_pinn = torch.stack((tt_pinn.flatten(), xx_pinn.flatten()), dim=1)
+    tx_pinn.requires_grad = True
 
+    u = model(tx_pinn)[:, 0]
+    u_grad = torch.autograd.grad(u, tx_pinn, grad_outputs=torch.ones_like(u), retain_graph=True, create_graph=True)[0]
+    u_t = u_grad[:, 0]
+    u_x = u_grad[:, 1]
+    u_x_grad = torch.autograd.grad(u_x, tx_pinn, grad_outputs=torch.ones_like(u), retain_graph=True, create_graph=True)[0]
+    u_xx = u_x_grad[:, 1]
 
-    T0_now = T_now
-    delta_T_now = delta_T / n_t
+    u = torch.reshape(u, (n_t, n_x))
+    u_t = torch.reshape(u_t, (n_t, n_x))
+    u_x = torch.reshape(u_x, (n_t, n_x))
+    u_xx = torch.reshape(u_xx, (n_t, n_x))
 
-    for i in range(1, n_t):
-        t_min = T0_now + delta_T_now * (i - 1)
-        t_max = T0_now + delta_T_now * i
-        t_pinn = torch.rand((n_pinn, 1), device=device) * (t_max - t_min) + t_min
-        x_pinn = torch.rand((n_pinn, 1), device=device) * (X1 - X0) + X0
-        tx_pinn = torch.cat((t_pinn, x_pinn), dim=1)
-        tx_pinn.requires_grad = True
+    f = u_t + u * u_x - nu * u_xx
+    losses = beta_f * torch.mean(f**2, dim=1)
 
+    with torch.no_grad():
+        loss_weightings = torch.exp(-epsilon * (weighting_matrix @ losses + losses_0))
 
-        u = model(tx_pinn)[:, 0]
-        u_grad = torch.autograd.grad(u, tx_pinn, grad_outputs=torch.ones_like(u), retain_graph=True, create_graph=True)[0]
-        u_t = u_grad[:, 0]
-        u_x = u_grad[:, 1]
-        u_x_grad = torch.autograd.grad(u_x, tx_pinn, grad_outputs=torch.ones_like(u), retain_graph=True, create_graph=True)[0]
-        u_xx = u_x_grad[:, 1]
-        u_xx_grad = torch.autograd.grad(u_xx, tx_pinn, grad_outputs=torch.ones_like(u), retain_graph=True, create_graph=True)[0]
-        u_xxx = u_xx_grad[:, 1]
-        u_xxx_grad = torch.autograd.grad(u_xxx, tx_pinn, grad_outputs=torch.ones_like(u), retain_graph=True, create_graph=True)[0]
-        u_xxxx = u_xxx_grad[:, 1]
-
-        f = u_t + alpha * u * u_x + beta * u_xx + gamma * u_xxxx
-
-        loss_weightings[i] = torch.exp(-epsilon * loss_sum)
-        losses[i] = beta_f * torch.mean(f**2)
-        loss_sum += losses[i]
-
-    loss = torch.mean(loss_weightings * losses)
+    loss = torch.mean(loss_weightings * losses + losses_0)
     loss.backward()
 
-    # print(f"Time march: {int((T_now - T0) / delta_T) + 1}/{T_iterations}, Epoch: {epoch:5d}, Epsilon: {epsilon:.3f}, Loss: {loss.item():.6f}")
-
-    if torch.min(loss_weightings[1:]) > delta:
-        raise KeyboardInterrupt
+    if torch.min(loss_weightings) > delta:
+        raise ValueError("stop")
 
     return loss
 
@@ -172,35 +149,67 @@ def closure():
 output_list = []
 
 t_start = 0
+epoch_start = 0
+epsilon_start = 0
+checkpoint = False
+
 files = os.listdir("./")
-for i in range(T_iterations):
-    if f"ks_{i}.pth" in files:
-        t_start = i + 1
+if "checkpoint.txt" in files:
+    with open("checkpoint.txt", "r") as f:
+        lines = f.readlines()
+        t_start = int(lines[0])
+        epoch_start = int(lines[1])
+        epsilon_start = int(lines[2])
+        checkpoint = True
 
 t_iteration_range = range(t_start, T_iterations)
 
-for t_iteration in t_iteration_range: # Time-marching
+for t_iteration in t_iteration_range:
     if t_iteration == 0:
         u_i = initial_condition(x_i)
     else:
         with torch.no_grad():
-            u_i = model(tx_ii)
+            model_prev = ModifiedMLP(input_dim, output_dim, hidden_dim, layers)
+            model_prev.load_state_dict(torch.load(f"ks_{t_iteration - 1}.pth"))
+            model_prev.to(device)
+            u_i = model_prev(tx_ii)
 
     model = ModifiedMLP(input_dim, output_dim, hidden_dim, layers)
     model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
-    for epsilon in epsilon_list:
+    if checkpoint:
+        model.load_state_dict(torch.load("model_checkpoint.pth"))
+        optimizer.load_state_dict(torch.load("optimizer_checkpoint.pth"))
+
+    for i_epsilon in range(epsilon_start, len(epsilon_list)):
+        epsilon = epsilon_list[i_epsilon]
         epoch = 0
-        pbar = tqdm(range(max_epochs))
+        pbar = tqdm(range(epoch_start, max_epochs))
         for i_epoch in pbar:
             try:
                 loss = optimizer.step(closure)
                 pbar.set_postfix({"Time march": f"{t_iteration + 1}/{T_iterations}", "Epsilon": f"{epsilon:.3f}", "Loss": f"{loss.item():.6f}"})
+
+                if i_epoch % 100 == 0:
+                    torch.save(model.state_dict(), "model_checkpoint.pth")
+                    torch.save(optimizer.state_dict(), "optimizer_checkpoint.pth")
+                    with open("checkpoint.txt", "w") as f:
+                        f.write(f"{t_iteration}\n{i_epoch}\n{i_epsilon}")
+
             except KeyboardInterrupt:
-                # break
+                torch.save(model.state_dict(), "model_checkpoint.pth")
+                torch.save(optimizer.state_dict(), "optimizer_checkpoint.pth")
+                with open("checkpoint.txt", "w") as f:
+                    f.write(f"{t_iteration}\n{i_epoch}\n{i_epsilon}")
                 sys.exit()
+            except ValueError as e:
+                if str(e) == "stop":
+                    break
+
+        epoch_start = 0
+    epsilon_start = 0
 
     with torch.no_grad():
         n = 100
@@ -210,7 +219,7 @@ for t_iteration in t_iteration_range: # Time-marching
         ttxx = torch.stack((tt.flatten(), xx.flatten()), dim=1)
         uu = model(ttxx)
         un = torch.reshape(uu, tt.shape)
-        np.savetxt(f"ks_{t_iteration}.txt", un.cpu())
+        np.savetxt(f"u_{t_iteration}.txt", un.cpu())
         output_list.append([un.cpu()])
 
-    torch.save(model.state_dict(), f"ks_{t_iteration}.pth")
+    torch.save(model.state_dict(), f"model_{t_iteration}.pth")
