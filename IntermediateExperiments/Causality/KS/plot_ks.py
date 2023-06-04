@@ -21,7 +21,7 @@ with torch.no_grad():
     un = torch.zeros((n, n * t_iterations))
     for i in range(n * t_iterations):
         try:
-            un[:, n * i:n * (i + 1)] = torch.tensor(np.loadtxt(f"ks_{i}.txt"))
+            un[:, n * i:n * (i + 1)] = torch.tensor(np.loadtxt(f"u_{i}.txt"))
         except:
             break
     #print(un.shape)

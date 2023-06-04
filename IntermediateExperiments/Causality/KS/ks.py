@@ -176,7 +176,7 @@ for t_iteration in t_iteration_range:
     else:
         with torch.no_grad():
             model_prev = ModifiedMLP(input_dim, output_dim, hidden_dim, layers)
-            model_prev.load_state_dict(torch.load(f"ks_{t_iteration - 1}.pth"))
+            model_prev.load_state_dict(torch.load(f"model_{t_iteration - 1}.pth"))
             model_prev.to(device)
             u_i = model_prev(tx_ii)
 
