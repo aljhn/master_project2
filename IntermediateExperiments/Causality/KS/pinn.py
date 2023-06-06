@@ -64,7 +64,7 @@ X0 = -1.0
 X1 = 1.0
 
 output_dim = 1
-hidden_dim = 50
+hidden_dim = 100
 layers = 5
 L = X1 - X0
 m = 5
@@ -90,7 +90,7 @@ t_ii = torch.ones((n_i, 1), device=device) * (T0 + delta_T)
 tx_ii = torch.cat((t_ii, x_i), dim=1)
 
 n_t = 20
-n_x = 100
+n_x = 50
 
 weighting_matrix = torch.triu(torch.ones((n_t, n_t), device=device), diagonal=1).T
 
