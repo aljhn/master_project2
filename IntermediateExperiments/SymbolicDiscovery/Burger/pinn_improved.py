@@ -84,21 +84,7 @@ model_true = ModifiedMLP(m, L, output_dim, hidden_dim, layers)
 model_true.load_state_dict(torch.load("model_vanilla.pth"))
 model_true.to(device)
 
-model_u = nn.Sequential(
-    nn.Linear(2, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 1)
-)
+model_u = ModifiedMLP(m, L, output_dim, hidden_dim, layers)
 model_u.to(device)
 
 """model_b = nn.Sequential(

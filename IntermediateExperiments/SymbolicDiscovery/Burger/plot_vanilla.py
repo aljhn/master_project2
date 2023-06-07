@@ -62,44 +62,10 @@ layers = 5
 L = X1 - X0
 m = 5
 
-model_true = ModifiedMLP(m, L, output_dim, hidden_dim, layers)
-model_u = nn.Sequential(
-    nn.Linear(2, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 1)
-)
-model_f = nn.Sequential(
-    nn.Linear(3, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 1)
-)
+model = ModifiedMLP(m, L, output_dim, hidden_dim, layers)
+model.load_state_dict(torch.load("model_vanilla.pth"))
 
-model_u.load_state_dict(torch.load("model_u.pth"))
-model_f.load_state_dict(torch.load("model_f.pth"))
-model_true.load_state_dict(torch.load("model_vanilla.pth"))
-
-#with torch.no_grad():
-if True:
+with torch.no_grad():
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rcParams["font.size"] = 14
 
@@ -108,35 +74,13 @@ if True:
     x = torch.linspace(X0, X1, n)
     tt, xx = torch.meshgrid(t, x, indexing="xy")
     ttxx = torch.stack((tt.flatten(), xx.flatten()), dim=1)
-    ttxx.requires_grad = True
-
-    uu_true = model_true(ttxx).squeeze()
-    uu_grad = torch.autograd.grad(uu_true, ttxx, grad_outputs=torch.ones_like(uu_true), retain_graph=True, create_graph=True)[0]
-    uu_t = uu_grad[:, 0]
-    uu_x = uu_grad[:, 1]
-
-    operator_true = - uu_true * uu_x
-    uu_collection = torch.stack((uu_true, uu_t, uu_x), dim=1)
-    operator_pred = model_f(uu_collection).squeeze()
-
-    op_diff = torch.mean((operator_pred - operator_true)**2)
-    print(f"Operator difference: {op_diff:.6f}")
-    # Standard: 0.285659
-    # ModifiedMLP + Fourier Embedding: 0.194059
-
-    uu = model_u(ttxx).squeeze()
-    uu_diff = torch.mean((uu - uu_true)**2)
-    print(f"U difference: {uu_diff:.6f}")
-    # Standard: 0.000128
-    # ModifiedMLP + Fourier Embedding: 0.000077
-
-    un = torch.reshape(uu, tt.shape).detach()
-
+    uu = model(ttxx)
+    un = torch.reshape(uu, tt.shape)
     plt.figure()
     plt.pcolormesh(t, x, un, vmin=-1.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$t$")
     plt.ylabel(r"$x$")
     plt.tight_layout()
-    plt.savefig("burger.pdf")
+    plt.savefig("burger_vanilla.pdf")
     plt.show()

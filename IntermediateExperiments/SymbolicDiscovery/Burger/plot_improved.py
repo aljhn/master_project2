@@ -63,21 +63,7 @@ L = X1 - X0
 m = 5
 
 model_true = ModifiedMLP(m, L, output_dim, hidden_dim, layers)
-model_u = nn.Sequential(
-    nn.Linear(2, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 20),
-    nn.Tanh(),
-    nn.Linear(20, 1)
-)
+model_u = ModifiedMLP(m, L, output_dim, hidden_dim, layers)
 model_f = nn.Sequential(
     nn.Linear(3, 20),
     nn.Tanh(),
