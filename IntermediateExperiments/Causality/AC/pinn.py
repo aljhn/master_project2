@@ -3,7 +3,6 @@ import sys
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -93,7 +92,7 @@ weighting_matrix = torch.triu(torch.ones((n_t, n_t), device=device), diagonal=1)
 
 criterion = nn.MSELoss()
 
-max_epochs = 300000
+max_epochs = 150000
 
 beta_i = 1e3
 beta_f = 1.0
@@ -169,7 +168,6 @@ if "checkpoint.txt" in files:
         checkpoint = True
 
 t_iteration_range = range(t_start, T_iterations)
-
 for t_iteration in t_iteration_range:
     if t_iteration == 0:
         u_i = initial_condition(x_i)
@@ -183,11 +181,13 @@ for t_iteration in t_iteration_range:
     model = ModifiedMLP(input_dim, output_dim, hidden_dim, layers)
     model.to(device)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.1)
 
     if checkpoint:
         model.load_state_dict(torch.load("model_checkpoint.pth"))
         optimizer.load_state_dict(torch.load("optimizer_checkpoint.pth"))
+        scheduler.load_state_dict(torch.load("scheduler_checkpoint.pth"))
 
     for i_epsilon in range(epsilon_start, len(epsilon_list)):
         epsilon = epsilon_list[i_epsilon]
@@ -197,26 +197,25 @@ for t_iteration in t_iteration_range:
             try:
                 loss = optimizer.step(closure)
                 pbar.set_postfix({"Time march": f"{t_iteration + 1}/{T_iterations}", "Epsilon": f"{epsilon:.3f}", "Loss": f"{loss.item():.6f}"})
-                #with torch.no_grad():
-                #    u_pred = model(ttxx_true)
-                #    val_loss = criterion(u_pred, u_true)
 
-                #train_losses.append(train_loss.item())
-                #val_losses.append(val_losses.item())
+                if (i_epoch + 1) % 100000 == 0:
+                    scheduler.step()
 
                 if i_epoch % 100 == 0:
                     torch.save(model.state_dict(), "model_checkpoint.pth")
                     torch.save(optimizer.state_dict(), "optimizer_checkpoint.pth")
+                    torch.save(scheduler.state_dict(), "scheduler_checkpoint.pth")
                     with open("checkpoint.txt", "w") as f:
                         f.write(f"{t_iteration}\n{i_epoch}\n{i_epsilon}")
 
             except KeyboardInterrupt:
                 torch.save(model.state_dict(), "model_checkpoint.pth")
                 torch.save(optimizer.state_dict(), "optimizer_checkpoint.pth")
+                torch.save(scheduler.state_dict(), "scheduler_checkpoint.pth")
                 with open("checkpoint.txt", "w") as f:
                     f.write(f"{t_iteration}\n{i_epoch}\n{i_epsilon}")
                 sys.exit()
-            except ValueError as e:
+            except ValueError as e: # Early stop triggered after 100 072 epochs
                 if str(e) == "stop":
                     break
 
