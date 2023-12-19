@@ -11,6 +11,10 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 
 
+# Boundary2: Dirichlet
+# Boundary1: Neumann
+
+
 model_u = nn.Sequential(
     nn.Linear(2, 50),
     nn.Tanh(),
@@ -20,7 +24,7 @@ model_u = nn.Sequential(
     nn.Tanh(),
     nn.Linear(50, 50),
     nn.Tanh(),
-    nn.Linear(50, 1)
+    nn.Linear(50, 1),
 )
 
 
@@ -31,16 +35,12 @@ model_c = nn.Sequential(
     nn.Tanh(),
     nn.Linear(30, 30),
     nn.Tanh(),
-    nn.Linear(30, 1)
+    nn.Linear(30, 1),
 )
 
 
 def initial_condition(x):
     return torch.sin(np.pi * x)
-
-
-def boundary_condition(t):
-    return torch.zeros_like(t)
 
 
 T0 = 0.0
@@ -75,7 +75,12 @@ tx_j = torch.cat((t_j, x_j), dim=1)
 
 
 criterion = nn.MSELoss()
-optimizer = torch.optim.LBFGS((*model_u.parameters(), *model_c.parameters()), lr=1, max_iter=10000, line_search_fn="strong_wolfe")
+optimizer = torch.optim.LBFGS(
+    (*model_u.parameters(), *model_c.parameters()),
+    lr=1,
+    max_iter=10000,
+    line_search_fn="strong_wolfe",
+)
 # optimizer = torch.optim.LBFGS(model_u.parameters(), lr=1, max_iter=10000, line_search_fn="strong_wolfe")
 
 model_u_jacobian = torch.vmap(torch.func.grad(lambda x: model_u(x).squeeze()))
@@ -118,10 +123,12 @@ def closure():
     loss = beta_b * ib_loss + beta_f * physics_loss + beta_j * cost
     loss.backward()
 
-    print(f"Epoch: {epoch:5d}, IB: {ib_loss.item():.8f}, F: {physics_loss.item():.8f}, C: {cost.item():.8f}")
+    print(
+        f"Epoch: {epoch:5d}, IB: {ib_loss.item():.8f}, F: {physics_loss.item():.8f}, C: {cost.item():.8f}"
+    )
 
     return loss
-    
+
 
 while True:
     try:
@@ -170,8 +177,8 @@ with torch.no_grad():
     tx = torch.cat((tx1, tx2, tx3), dim=0)
     u = model_u(tx)
     u1 = u[:n, 0]
-    u2 = u[n:2 * n, 0]
-    u3 = u[2 * n:, 0]
+    u2 = u[n : 2 * n, 0]
+    u3 = u[2 * n :, 0]
 
     plt.figure()
     plt.plot(x, u1)
@@ -181,7 +188,7 @@ with torch.no_grad():
     plt.tight_layout()
     plt.savefig("heat1d_optimal_control_boundary2_slice1.pdf")
     plt.show()
-    
+
     plt.figure()
     plt.plot(x, u2)
     plt.xlabel(r"$x$")

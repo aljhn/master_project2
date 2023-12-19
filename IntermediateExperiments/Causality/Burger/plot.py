@@ -21,11 +21,11 @@ with torch.no_grad():
     un = torch.zeros((n, n * t_iterations))
     for i in range(n * t_iterations):
         try:
-            un[:, n * i:n * (i + 1)] = torch.tensor(np.loadtxt(f"u_{i}.txt"))
+            un[:, n * i : n * (i + 1)] = torch.tensor(np.loadtxt(f"u_{i}.txt"))
         except:
             break
-    #print(un.shape)
-    #exit()
+    # print(un.shape)
+    # exit()
     plt.figure()
     plt.pcolormesh(t.cpu(), x.cpu(), un.cpu(), vmin=-1.0, vmax=1.0, cmap="rainbow")
     plt.colorbar()
@@ -33,4 +33,46 @@ with torch.no_grad():
     plt.ylabel(r"$x$")
     plt.tight_layout()
     plt.savefig("burger.pdf")
+    plt.show()
+
+    n = un.shape[1]
+
+    plt.figure()
+    plt.plot(x, un[:, 0])
+    plt.xlabel(r"$x$")
+    plt.ylabel(r"$u(t, x)$")
+    plt.xlim([X0, X1])
+    plt.ylim([-1, 1])
+    plt.tight_layout()
+    plt.savefig("burger_slice1.pdf")
+    plt.show()
+
+    plt.figure()
+    plt.plot(x, un[:, n // 3 - 1])
+    plt.xlabel(r"$x$")
+    plt.ylabel(r"$u(t, x)$")
+    plt.xlim([X0, X1])
+    plt.ylim([-1, 1])
+    plt.tight_layout()
+    plt.savefig("burger_slice2.pdf")
+    plt.show()
+
+    plt.figure()
+    plt.plot(x, un[:, n * 2 // 3 - 1])
+    plt.xlabel(r"$x$")
+    plt.ylabel(r"$u(t, x)$")
+    plt.xlim([X0, X1])
+    plt.ylim([-1, 1])
+    plt.tight_layout()
+    plt.savefig("burger_slice3.pdf")
+    plt.show()
+
+    plt.figure()
+    plt.plot(x, un[:, n - 1])
+    plt.xlabel(r"$x$")
+    plt.ylabel(r"$u(t, x)$")
+    plt.xlim([X0, X1])
+    plt.ylim([-1, 1])
+    plt.tight_layout()
+    plt.savefig("burger_slice4.pdf")
     plt.show()

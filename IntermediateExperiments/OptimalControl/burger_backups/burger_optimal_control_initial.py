@@ -20,7 +20,7 @@ model_u = nn.Sequential(
     nn.Tanh(),
     nn.Linear(50, 50),
     nn.Tanh(),
-    nn.Linear(50, 1),
+    nn.Linear(50, 1)
 )
 
 
@@ -31,7 +31,7 @@ model_c = nn.Sequential(
     nn.Tanh(),
     nn.Linear(30, 30),
     nn.Tanh(),
-    nn.Linear(30, 1),
+    nn.Linear(30, 1)
 )
 
 
@@ -44,14 +44,8 @@ nu = 0.01
 
 
 def solution(t, x):
-    return (
-        2.0
-        * nu
-        * np.pi
-        * torch.exp(-(np.pi**2.0) * nu * (t - 5.0))
-        * torch.sin(np.pi * x)
+    return 2.0 * nu * np.pi * torch.exp(-(np.pi**2.0) * nu * (t - 5.0)) * torch.sin(np.pi * x) \
         / (2.0 + torch.exp(-(np.pi**2.0) * nu * (t - 5.0)) * torch.cos(np.pi * x))
-    )
 
 
 n_data = 400
@@ -61,9 +55,7 @@ x_i = torch.rand((n_data // 2, 1)) * (X1 - X0) + X0
 tx_i = torch.cat((t_i, x_i), dim=1)
 
 t_b = torch.rand((n_data // 2, 1)) * (T1 - T0) + T0
-x_b = torch.cat(
-    (torch.ones((n_data // 4, 1)) * X0, torch.ones((n_data // 4, 1)) * X1), dim=0
-)
+x_b = torch.cat((torch.ones((n_data // 4, 1)) * X0, torch.ones((n_data // 4, 1)) * X1), dim=0)
 tx_b = torch.cat((t_b, x_b), dim=1)
 u_b = torch.zeros_like(t_b)
 
@@ -123,10 +115,10 @@ def closure():
 
     u_i = model_c(x_i)
     # u_i = solution(torch.tensor([T0]), x_i)
-    u_i_pred = u_ib_pred[: n_data // 2, :]
+    u_i_pred = u_ib_pred[:n_data // 2, :]
     initial_loss = criterion(u_i_pred, u_i)
 
-    u_b_pred = u_ib_pred[n_data // 2 :, :]
+    u_b_pred = u_ib_pred[n_data // 2:, :]
     boundary_loss = criterion(u_b_pred, u_b)
 
     u = model_u(tx_pinn)[:, 0]
@@ -139,20 +131,13 @@ def closure():
     physics_loss = torch.mean(f**2)
 
     u_j_pred = model_u(tx_j)[:, 0]
-    j = 0.5 * ((u_j_pred - u_j) ** 2.0)
+    j = 0.5 * ((u_j_pred - u_j)**2.0)
     cost = trapezoid(j, h_j)
 
-    loss = (
-        beta_i * initial_loss
-        + beta_b * boundary_loss
-        + beta_f * physics_loss
-        + beta_j * cost
-    )
+    loss = beta_i * initial_loss + beta_b * boundary_loss + beta_f * physics_loss + beta_j * cost
     loss.backward()
 
-    print(
-        f"Epoch: {epoch:5d}, I: {initial_loss.item():.8f}, B: {boundary_loss.item():.8f}, F: {physics_loss.item():.8f}, C: {cost.item():.8f}"
-    )
+    print(f"Epoch: {epoch:5d}, I: {initial_loss.item():.8f}, B: {boundary_loss.item():.8f}, F: {physics_loss.item():.8f}, C: {cost.item():.8f}")
 
     i_losses.append(initial_loss.item())
     b_losses.append(boundary_loss.item())
@@ -160,13 +145,13 @@ def closure():
     j_losses.append(cost.item())
 
     return loss
-
+    
 
 while True:
     try:
         optimizer.step(closure)
-        # if epoch == 18000:
-        #    optimizer = torch.optim.LBFGS((*model_u.parameters(), *model_c.parameters()), lr=1, max_iter=10000, line_search_fn="strong_wolfe")
+        if epoch == 18000:
+            optimizer = torch.optim.LBFGS((*model_u.parameters(), *model_c.parameters()), lr=1, max_iter=10000, line_search_fn="strong_wolfe")
     except KeyboardInterrupt:
         break
 
