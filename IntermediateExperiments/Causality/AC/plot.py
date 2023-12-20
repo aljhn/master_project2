@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+from scipy.io import loadmat
 
 
 n = 100
@@ -21,13 +22,20 @@ input_dim = 2 * m + 1 + 1
 
 fourier_omegas = torch.arange(1, m + 1, 1).unsqueeze(0) * 2.0 * np.pi / L
 
+
 def fourier_embedding(x):
-    embedding = torch.cat((torch.ones_like(x), torch.cos(x @ fourier_omegas), torch.sin(x @ fourier_omegas)), dim=1)
+    embedding = torch.cat(
+        (
+            torch.ones_like(x),
+            torch.cos(x @ fourier_omegas),
+            torch.sin(x @ fourier_omegas),
+        ),
+        dim=1,
+    )
     return embedding
 
+
 class ModifiedMLP(nn.Module):
-
-
     def __init__(self, input_dim, output_dim, hidden_dim, layers):
         super(ModifiedMLP, self).__init__()
         self.U_layer = nn.Linear(input_dim, hidden_dim)
@@ -42,7 +50,6 @@ class ModifiedMLP(nn.Module):
         self.Z_layers = nn.Sequential(*self.Z_layers)
 
         self.activation = nn.Tanh()
-
 
     def forward(self, X):
         T, X = X[:, 0].unsqueeze(1), X[:, 1:]
@@ -74,7 +81,9 @@ with torch.no_grad():
             break"""
 
     model = ModifiedMLP(input_dim, output_dim, hidden_dim, layers)
-    model.load_state_dict(torch.load("model_checkpoint.pth"))
+    model.load_state_dict(
+        torch.load("model_checkpoint.pth", map_location=torch.device("cpu"))
+    )
 
     t = torch.linspace(T0, T1, n)
     x = torch.linspace(X0, X1, n)
@@ -91,3 +100,17 @@ with torch.no_grad():
     plt.tight_layout()
     plt.savefig("ac.pdf")
     plt.show()
+
+    data_true = loadmat("../../../Data/ac.mat")
+    tt_true = data_true["tt"]
+    xx_true = data_true["x"]
+    uu_true = data_true["uu"]
+
+    t_data = torch.tensor(tt_true, dtype=torch.float32).squeeze()
+    x_data = torch.tensor(xx_true, dtype=torch.float32).squeeze()
+    u_data = torch.tensor(uu_true, dtype=torch.float32)
+    tt_data, xx_data = torch.meshgrid(t_data, x_data, indexing="xy")
+    ttxx_data = torch.stack((tt_data.flatten(), xx_data.flatten()), dim=1)
+    uu_pred = model(ttxx_data)
+    u_pred = torch.reshape(uu_pred, u_data.shape)
+    print(torch.mean((u_pred - u_data) ** 2))  # 3.2457e-06
