@@ -28,28 +28,6 @@ model_u = nn.Sequential(
 model_u.to(device)
 
 
-model_c = nn.Sequential(
-    nn.Linear(1, 30),
-    nn.Tanh(),
-    nn.Linear(30, 30),
-    nn.Tanh(),
-    nn.Linear(30, 30),
-    nn.Tanh(),
-    nn.Linear(30, 1),
-)
-model_c.to(device)
-
-
-# def solution_u(x, y):
-#     return 1.0 / 2.0 / np.cosh(2.0 * np.pi) * torch.sin(2.0 * np.pi * x) * (torch.exp(2.0 * np.pi * (y - 1.0)) + torch.exp(2.0 * np.pi * (1.0 - y))) \
-#         + 1.0 / (4.0 * np.pi) / np.cosh(2.0 * np.pi) * torch.cos(2.0 * np.pi * x) * (torch.exp(2.0 * np.pi * y) - torch.exp(-2.0 * np.pi * y))
-
-
-# def solution_c(x):
-#     return 1.0 / np.cosh(2.0 * np.pi) * torch.sin(2.0 * np.pi * x) \
-#         + 1.0 / (2.0 * np.pi) * np.tanh(2.0 * np.pi) * torch.cos(2.0 * np.pi * x)
-
-
 def boundary_condition(x):
     return torch.sin(np.pi * x)
 
@@ -70,10 +48,12 @@ y_boundary = torch.ones(n_data, device=device) * Y0
 u_boundary = boundary_condition(x_boundary).unsqueeze(1)
 xy_boundary = torch.stack((x_boundary, y_boundary), dim=1)
 
-x_control = torch.rand(n_data, device=device) * (X1 - X0) + X0
+x_control = torch.linspace(X0, X1, n_data, device=device)
 y_control = torch.ones(n_data, device=device) * Y1
 xy_control = torch.stack((x_control, y_control), dim=1)
-x_control = x_control.unsqueeze(1)
+u_control = torch.tensor(
+    np.loadtxt("laplace_control"), device=device, dtype=torch.float32
+).unsqueeze(1)
 
 x_periodic_boundary0 = torch.ones(n_data, device=device) * X0
 y_periodic_boundary0 = torch.rand(n_data, device=device) * (Y1 - Y0) + Y0
@@ -87,7 +67,6 @@ xy_periodic_boundary = torch.cat((xy_periodic_boundary0, xy_periodic_boundary1),
 
 xy_data = torch.cat((xy_boundary, xy_control, xy_periodic_boundary), dim=0)
 
-
 n_pinn = 10000
 x_pinn = torch.rand(n_pinn, device=device) * (X1 - X0) + X0
 y_pinn = torch.rand(n_pinn, device=device) * (Y1 - Y0) + Y0
@@ -95,7 +74,7 @@ xy_pinn = torch.stack((x_pinn, y_pinn), dim=1)
 
 criterion = nn.MSELoss()
 optimizer = torch.optim.LBFGS(
-    (*model_u.parameters(), *model_c.parameters()),
+    (*model_u.parameters(),),
     lr=1,
     max_iter=10000,
     line_search_fn="strong_wolfe",
@@ -144,7 +123,6 @@ def closure():
     boundary_loss += criterion(u_boundary_pred, u_boundary)
 
     u_control_pred = u_data[n_data : 2 * n_data, :]
-    u_control = model_c(x_control)
     boundary_loss += criterion(u_control_pred, u_control)
 
     u_periodic_boundary0 = u_data[2 * n_data : 3 * n_data, :]
@@ -168,7 +146,7 @@ def closure():
     j = (u_j_dy - u_j) ** 2.0
     cost = trapezoid(j, h_j)
 
-    loss = beta_b * boundary_loss + beta_f * physics_loss + beta_j * cost
+    loss = beta_b * boundary_loss + beta_f * physics_loss
     loss.backward()
 
     losses[epoch - 1, 0] = boundary_loss.item()
@@ -203,12 +181,9 @@ with torch.no_grad():
     # uu_true = solution_u(xx, yy)
     # print("True difference:", torch.mean((un - uu_true)**2))
 
-    cc = model_c(x.unsqueeze(1))
-
     x = x.cpu()
     y = y.cpu()
     un = un.cpu()
-    cc = cc.cpu()
 
     # plt.figure()
     # plt.pcolormesh(x, y, uu_true, cmap="rainbow")
@@ -225,15 +200,7 @@ with torch.no_grad():
     plt.xlabel(r"$x$")
     plt.ylabel(r"$y$")
     plt.tight_layout()
-    plt.savefig("laplace_optimal_control.pdf")
-    plt.show()
-
-    plt.figure()
-    plt.plot(x, cc[:, 0])
-    plt.xlabel(r"$x$")
-    plt.ylabel(r"$c$")
-    plt.tight_layout()
-    plt.savefig("laplace_optimal_control_control.pdf")
+    plt.savefig("laplace_optimal_control_validate.pdf")
     plt.show()
 
     plt.figure()
@@ -245,7 +212,5 @@ with torch.no_grad():
     plt.legend(["Boundary", "Physics", "Cost"])
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig("laplace_optimal_control_losses.pdf")
+    plt.savefig("laplace_optimal_control_losses_validate.pdf")
     plt.show()
-
-    np.savetxt("laplace_control", cc[:, 0])

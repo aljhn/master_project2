@@ -169,6 +169,20 @@ def closure():
     cost = trapezoid(j, h_j)
 
     loss = beta_b * boundary_loss + beta_f * physics_loss + beta_j * cost
+
+    uu_boundary = model_u(xy_data)
+    boundary_max = torch.max(uu_boundary)
+    boundary_min = torch.min(uu_boundary)
+    uu_pinn = model_u(xy_pinn)
+    maximum_regularization = torch.maximum(
+        uu_pinn - boundary_max, torch.zeros_like(uu_pinn)
+    )
+    loss += torch.sum(maximum_regularization**2)
+    minimum_regularization = torch.minimum(
+        uu_pinn - boundary_min, torch.zeros_like(uu_pinn)
+    )
+    loss += torch.sum(minimum_regularization**2)
+
     loss.backward()
 
     losses[epoch - 1, 0] = boundary_loss.item()
@@ -225,7 +239,7 @@ with torch.no_grad():
     plt.xlabel(r"$x$")
     plt.ylabel(r"$y$")
     plt.tight_layout()
-    plt.savefig("laplace_optimal_control.pdf")
+    plt.savefig("laplace_optimal_control_reg.pdf")
     plt.show()
 
     plt.figure()
@@ -233,7 +247,7 @@ with torch.no_grad():
     plt.xlabel(r"$x$")
     plt.ylabel(r"$c$")
     plt.tight_layout()
-    plt.savefig("laplace_optimal_control_control.pdf")
+    plt.savefig("laplace_optimal_control_control_reg.pdf")
     plt.show()
 
     plt.figure()
@@ -245,7 +259,5 @@ with torch.no_grad():
     plt.legend(["Boundary", "Physics", "Cost"])
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig("laplace_optimal_control_losses.pdf")
+    plt.savefig("laplace_optimal_control_losses_reg.pdf")
     plt.show()
-
-    np.savetxt("laplace_control", cc[:, 0])

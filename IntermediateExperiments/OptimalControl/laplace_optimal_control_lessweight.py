@@ -110,7 +110,7 @@ epoch = 0
 
 beta_b = 1.0
 beta_f = 1.0
-beta_j = 100.0
+beta_j = 1.0
 
 n_j = 41
 h_j = 1.0 / n_j
@@ -225,7 +225,7 @@ with torch.no_grad():
     plt.xlabel(r"$x$")
     plt.ylabel(r"$y$")
     plt.tight_layout()
-    plt.savefig("laplace_optimal_control.pdf")
+    plt.savefig("laplace_optimal_control_lessweight.pdf")
     plt.show()
 
     plt.figure()
@@ -233,7 +233,7 @@ with torch.no_grad():
     plt.xlabel(r"$x$")
     plt.ylabel(r"$c$")
     plt.tight_layout()
-    plt.savefig("laplace_optimal_control_control.pdf")
+    plt.savefig("laplace_optimal_control_control_lessweight.pdf")
     plt.show()
 
     plt.figure()
@@ -245,7 +245,7 @@ with torch.no_grad():
     plt.legend(["Boundary", "Physics", "Cost"])
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig("laplace_optimal_control_losses.pdf")
+    plt.savefig("laplace_optimal_control_losses_lessweight.pdf")
     plt.show()
 
     np.savetxt("laplace_control", cc[:, 0])
