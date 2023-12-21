@@ -112,7 +112,7 @@ with torch.no_grad():
     plt.legend(["True Solution", "Learned Solution"])
     plt.ylim([-0.1, 0.1])
     plt.tight_layout()
-    plt.savefig("burger_control_slice0.pdf")
+    plt.savefig("burger_slice0.pdf")
     plt.show()
 
     plt.figure()
@@ -123,5 +123,5 @@ with torch.no_grad():
     plt.legend(["True Solution", "Learned Solution"])
     plt.ylim([-0.1, 0.1])
     plt.tight_layout()
-    plt.savefig("burger_control_slice1.pdf")
+    plt.savefig("burger_slice1.pdf")
     plt.show()
