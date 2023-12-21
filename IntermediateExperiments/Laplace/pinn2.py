@@ -58,7 +58,7 @@ xy4 = torch.stack((x4, y4), dim=1)
 xy_data = torch.cat((xy1, xy2, xy3, xy4), dim=0)
 u_data = torch.cat((u1, u2, u3, u4), dim=0).unsqueeze(1)
 
-n_pinn = 200
+n_pinn = 10000
 x_pinn = torch.rand(n_pinn) * (X1 - X0) + X0
 y_pinn = torch.rand(n_pinn) * (Y1 - Y0) + Y0
 xy_pinn = torch.stack((x_pinn, y_pinn), dim=1)

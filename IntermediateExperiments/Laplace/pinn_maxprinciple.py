@@ -138,8 +138,6 @@ while True:
 np.savetxt("train_losses_maxmin", train_losses)
 np.savetxt("val_losses_maxmin", val_losses)
 
-exit()
-
 
 with torch.no_grad():
     plt.rcParams["font.family"] = "Times New Roman"

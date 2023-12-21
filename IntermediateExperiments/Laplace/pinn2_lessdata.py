@@ -101,19 +101,6 @@ def closure():
     f = u_laplacian
     loss += 0.1 * torch.mean(f**2)
 
-    u_boundary = model(xy_data)
-    boundary_max = torch.max(u_boundary)
-    boundary_min = torch.min(u_boundary)
-    u_pinn = model(xy_pinn)
-    maximum_regularization = torch.maximum(
-        u_pinn - boundary_max, torch.zeros_like(u_pinn)
-    )
-    loss += torch.sum(maximum_regularization**2)
-    minimum_regularization = torch.minimum(
-        u_pinn - boundary_min, torch.zeros_like(u_pinn)
-    )
-    loss += torch.sum(minimum_regularization**2)
-
     loss.backward()
 
     with torch.no_grad():
@@ -135,8 +122,8 @@ while True:
     except KeyboardInterrupt:
         break
 
-np.savetxt("train_losses_maxmin_lessdata", train_losses)
-np.savetxt("val_losses_maxmin_lessdata", val_losses)
+np.savetxt("train_losses_lessdata", train_losses)
+np.savetxt("val_losses_lessdata", val_losses)
 
 exit()
 
