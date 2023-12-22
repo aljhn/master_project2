@@ -18,8 +18,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class ModifiedMLP(nn.Module):
-
-
     def __init__(self, input_dim, output_dim, hidden_dim, layers):
         super(ModifiedMLP, self).__init__()
         self.U_layer = nn.Linear(input_dim, hidden_dim)
@@ -34,7 +32,6 @@ class ModifiedMLP(nn.Module):
         self.Z_layers = nn.Sequential(*self.Z_layers)
 
         self.activation = nn.Tanh()
-
 
     def forward(self, X):
         T, X = X[:, 0].unsqueeze(1), X[:, 1:]
@@ -72,9 +69,18 @@ input_dim = 2 * m + 1 + 1
 
 fourier_omegas = torch.arange(1, m + 1, 1, device=device).unsqueeze(0) * 2.0 * np.pi / L
 
+
 def fourier_embedding(x):
-    embedding = torch.cat((torch.ones_like(x, device=device), torch.cos(x @ fourier_omegas), torch.sin(x @ fourier_omegas)), dim=1)
+    embedding = torch.cat(
+        (
+            torch.ones_like(x, device=device),
+            torch.cos(x @ fourier_omegas),
+            torch.sin(x @ fourier_omegas),
+        ),
+        dim=1,
+    )
     return embedding
+
 
 nu = 0.01 / np.pi
 
@@ -105,6 +111,7 @@ epsilon_list = [1e-2, 1e-1, 1.0, 1e1, 1e2]
 i_losses = []
 f_losses = []
 
+
 def closure():
     optimizer.zero_grad()
 
@@ -120,10 +127,22 @@ def closure():
     tx_pinn.requires_grad = True
 
     u = model(tx_pinn)[:, 0]
-    u_grad = torch.autograd.grad(u, tx_pinn, grad_outputs=torch.ones_like(u), retain_graph=True, create_graph=True)[0]
+    u_grad = torch.autograd.grad(
+        u,
+        tx_pinn,
+        grad_outputs=torch.ones_like(u),
+        retain_graph=True,
+        create_graph=True,
+    )[0]
     u_t = u_grad[:, 0]
     u_x = u_grad[:, 1]
-    u_x_grad = torch.autograd.grad(u_x, tx_pinn, grad_outputs=torch.ones_like(u), retain_graph=True, create_graph=True)[0]
+    u_x_grad = torch.autograd.grad(
+        u_x,
+        tx_pinn,
+        grad_outputs=torch.ones_like(u),
+        retain_graph=True,
+        create_graph=True,
+    )[0]
     u_xx = u_x_grad[:, 1]
 
     u = torch.reshape(u, (n_t, n_x))
@@ -190,7 +209,13 @@ for t_iteration in t_iteration_range:
         for i_epoch in pbar:
             try:
                 loss = optimizer.step(closure)
-                pbar.set_postfix({"Time march": f"{t_iteration + 1}/{T_iterations}", "Epsilon": f"{epsilon:.3f}", "Loss": f"{loss.item():.6f}"})
+                pbar.set_postfix(
+                    {
+                        "Time march": f"{t_iteration + 1}/{T_iterations}",
+                        "Epsilon": f"{epsilon:.3f}",
+                        "Loss": f"{loss.item():.6f}",
+                    }
+                )
 
                 if i_epoch % 100 == 0:
                     torch.save(model.state_dict(), "model_checkpoint.pth")

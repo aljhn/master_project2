@@ -94,7 +94,7 @@ with torch.no_grad():
     un = torch.reshape(uu, tt.shape)
 
     plt.figure()
-    plt.pcolormesh(t.cpu(), x.cpu(), un.cpu(), vmin=-1.0, vmax=1.0, cmap="rainbow")
+    plt.pcolormesh(t.cpu(), x.cpu(), un.cpu(), vmin=-0.1, vmax=0.1, cmap="rainbow")
     plt.colorbar()
     plt.xlabel(r"$t$")
     plt.ylabel(r"$x$")

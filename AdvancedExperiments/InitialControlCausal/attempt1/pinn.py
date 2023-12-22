@@ -47,10 +47,6 @@ class ModifiedMLP(nn.Module):
         return self.final_layer(H)
 
 
-def initial_condition(x):
-    return (x**2.0) * torch.cos(np.pi * x)
-
-
 T0 = 0.0
 T1 = 5.0
 X0 = 0.0
@@ -108,7 +104,8 @@ criterion = nn.MSELoss()
 max_epochs = 20000
 
 beta_i = 1.0
-beta_f = 1.0
+beta_f = 10000.0
+beta_j = 1.0
 
 delta = 0.99
 epsilon_list = [1e-2, 1e-1, 1.0, 1e1, 1e2]
@@ -116,7 +113,7 @@ epsilon_list = [1e-2, 1e-1, 1.0, 1e1, 1e2]
 n_j = 41
 h_j = 1.0 / n_j
 x_j = torch.linspace(X0, X1, n_j, device=device)
-u_j = solution(torch.tensor([T1]), x_j)
+u_j = solution(torch.tensor([T1], device=device), x_j)
 t_j = torch.ones(n_j, device=device) * T1
 tx_j = torch.stack((t_j, x_j), dim=1)
 
@@ -194,7 +191,7 @@ def closure():
     u_j_pred = model_u(tx_j)[:, 0]
     j = 0.5 * ((u_j_pred - u_j) ** 2.0)
     cost = trapezoid(j, h_j)
-    loss += cost
+    loss += beta_j * cost
 
     loss.backward()
 
