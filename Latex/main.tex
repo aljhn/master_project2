@@ -1,0 +1,281 @@
+% Først spesifiserer vi hvilken dokumentklasse vi vil ha og noen 
+% globale opsjoner. Bytt ut 'article' med 'book' hvis du vil ha 
+% med kapitler.
+
+%\documentclass[a4paper, 11pt, twoside, open=right]{scrreprt}
+\documentclass[a4paper, 11pt, open=right]{scrreprt}
+
+% scrreprt, se koma--script (?)
+%\usepackage[bottom]{footmisc}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PACKAGE IMPORTS
+
+% Så sier vi fra om hvilke tilleggspakker vi trenger
+% til dokumentet vårt. De som du ikke trenger (se kommentaren) 
+% kan det være en fordel å kommentere ut (sett prosenttegn foran),
+% da vil kompilering gå raskere.
+
+\usepackage[norsk,main=english]{babel}	% norske navn rundt omkring
+\usepackage{soul}  %highlighter
+%\usepackage[T1]{fontenc}		% norsk tegnsett (æøå)
+%\usepackage[utf8]{inputenc}	% norsk tegnsett
+\usepackage[top=3cm, bottom=3cm]{geometry}		% anbefalt pakke for å styre marger.
+\usepackage{cancel} % to show that things cancel in equations
+\usepackage{gensymb} % to get "degrees" symbol
+\usepackage[sort, numbers]{natbib}
+\usepackage{svg}
+\usepackage{physics}
+\usepackage{lipsum} % Package to generate dummy text throughout this template
+\usepackage{placeins} % package for figure placements, can force figure witin section by \FloatBarrier
+\usepackage{multicol} % Used for the two-column layout of the document
+\usepackage{chemformula} % Write co2 with \cm{co2} or something
+\usepackage{tabstackengine} % make matrices prettier
+\stackMath
+\usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
+\usepackage{amsmath,amsfonts,amssymb} % matematikksymboler
+
+\usepackage{amsthm}                   % for å lage teoremer og lignende.
+%\usepackage{graphicx}                 % inkludering av grafikk
+\usepackage[graphicx]{realboxes}
+\usepackage{varwidth}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{algorithmic}
+
+%\usepackage{subfigure}                   % hvis du vil kunne ha flere
+                                      % figurer inni en fig
+\usepackage{subcaption} 
+\usepackage{listings}                 % Fin for inkludering av kildekode
+\usepackage{tikzsymbols}              % Makes smileys possible C:
+\usepackage{textcomp}                 % was used in smiley example so probs needed for that
+
+\usepackage{hyperref}                % Lager hyperlinker i evt. pdf-dokument
+                                      % men har noen bugs, så den er kommentert
+                                      % bort her.
+\usepackage{svg}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\sisetup{load-configurations = abbreviations}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing}
+\usepackage{rotating} % For rotated tables, figures, etc.
+\usepackage{tablefootnote} % For footnotes in tables
+
+\usepackage{afterpage} % To keep figure and table together
+
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+
+\usepackage[thinc]{esdiff} % For nice derivative commands.
+\usepackage{bm} % For bold greek letters in math mode.
+\usepackage{relsize} % For resizing subscripts.
+
+\usepackage{float}
+\usepackage{changepage}
+
+\newcommand{\vect}[1]{\bm{#1}} % Typesetting vectors.
+
+\newcommand{\blackline}{\raisebox{0.8pt}{\textbf{---}}}
+\definecolor{green}{rgb}{0,0.6,0}
+\newcommand{\greenline}{\raisebox{0.8pt}{\textcolor{green}{\textbf{---}}}}
+\newcommand{\redline}{\raisebox{0.8pt}{\textcolor{red}{\textbf{---}}}}
+\newcommand{\blueline}{\raisebox{0.8pt}{\textcolor{blue}{\textbf{---}}}}
+
+\newcommand{\ubar}[1]{\mkern3mu\underline{\mkern-3mu #1\mkern-3mu}\mkern3mu}
+
+%\newcommand{\norm}[1]{\left\|#1\right\|} % Typesetting norms
+
+\DeclareOldFontCommand{\bf}{\normalfont\bfseries}{\mathbf}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NOMENCLATURE SET-UP
+
+\usepackage[intoc]{nomencl} 
+%% This code creates the groups
+% -----------------------------------------
+\usepackage{etoolbox}
+%\renewcommand*{\pagedeclaration}[1]{\unskip, #1}
+
+%\setlength{\nomitemsep}{-\parsep}
+
+%\newlength{\nomgroupstartsep}
+%\setlength{\nomgroupstartsep}{32pt}
+%\RequirePackage{ifthen}
+%\renewcommand\nomgroup[1]{%
+%    \ifthenelse{\equal{#1}{A}}{\item[\Large\textbf{Abbreviations}]}{%
+%    \newline\ifthenelse{\equal{#1}{B}}{\item[\Large\textbf{Scalars and scalar fields}]}{
+%    \vspace{10.0em}\ifthenelse{\equal{#1}{C}}{\item[\Large\textbf{ Vectors and matrices}]}{
+%    \vspace{-10.0em}\ifthenelse{\equal{#1}{D}}{\item[\Large\textbf{Subscripts}]}{
+%    \ifthenelse{\equal{#1}{E}}{\item[\Large\textbf{Superscripts}]}{
+%    \ifthenelse{\equal{#1}{F}}{\item[\Large\textbf{Functions and Operators}]}{
+%    \ifthenelse{\equal{#1}{S}}{\item[\Large\textbf{Sets}]}{
+%    \ifthenelse{\equal{#1}{M}}{\item[\Large\textbf{Modifiers}]}{
+%    \ifthenelse{\equal{#1}{Z}}{\item[\Large\textbf{Machine Learning Notation}]}{
+%    }}}}}}}}}
+%}
+  %\item[%\bfseries
+  %\ifstrequal{#1}{B}{\Large\textbf{Scalars and scalar fields}\newline}{%
+  %\ifstrequal{#1}{C}{\Large\textbf{Vectors and matrices}\newline}{%
+  %\ifstrequal{#1}{D}{\Large\textbf{Subscripts}\newline}{%
+  %\ifstrequal{#1}{E}{\Large\textbf{Superscripts}\newline}{%
+  %\ifstrequal{#1}{S}{\Large\textbf{Sets}\newline}{%
+  %\ifstrequal{#1}{M}{\Large\textbf{Modifiers}\newline}{%
+  %\ifstrequal{#1}{Z}{\Large\textbf{Machine Learning Notation}\newline}{%
+  %\ifstrequal{\newline}{}}}}}}}}%
+%]}
+% -----------------------------------------
+% This will add the units
+%----------------------------------------------
+%\newcommand{\nomunit}[1]{%
+%\renewcommand{\nomentryend}{\hspace*{\fill}#1}}
+%----------------------------------------------
+%\makenomenclature
+                                 
+% Indeksgenerering er kommentert ut her. Ta bort prosenttegnene
+% hvis du vil ha en indeks:
+%\usepackage{makeidx}     
+%\makeindex             
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FILE PATHS
+
+\graphicspath{{Figures/}} %Setting the graphicspath
+% Selve dokumentet begynner:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN DOCUMENT
+
+\begin{document}
+
+% På forsida skal vi ikke ha noen sidenummerering:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FRONT PAGE
+
+\pagestyle{empty}
+\pagenumbering{roman}
+
+% Inkluder forsida:
+\input{Frontpage}
+
+%\input{fill}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ABSTRACT
+
+% Romerske tall på alt før selve rapporten starter er pent.
+\pagenumbering{roman}
+
+% For å ikke begynne abstract på baksida av forsida:
+%\null\newpage
+% (kun aktuelt når man har twoside som global opsjon)
+
+% Nå vi vil ha noe i topp- og bunnteksten
+\pagestyle{headings}
+\setcounter{page}{1}
+\input{Abstract.tex}
+\addcontentsline{toc}{chapter}{Abstract}
+\input{Sammendrag.tex}
+\addcontentsline{toc}{chapter}{Sammendrag}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PREFACE
+
+%\setcounter{page}{2}
+\input{Preface.tex}
+\addcontentsline{toc}{chapter}{Preface}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TABLE OF CONTENTS
+
+% Si til LaTeX at vi vil ha ei innholdsliste generert akkurat her:
+\tableofcontents
+% Pass på at neste side ikke begynner på baksida av en annen side.
+\cleardoublepage
+%\setcounter{lofdepth}{2}
+\listoffigures
+\addcontentsline{toc}{section}{List of Figures}
+\newpage
+\listoftables
+\addcontentsline{toc}{section}{List of Tables}
+\newpage
+\listofalgorithms
+\addcontentsline{toc}{section}{List of Algorithms}
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NOMENCLATURE
+
+%\input{Nomenclature}
+%\printnomenclature[4cm]
+\setcounter{page}{6} 
+\input{Nomenclature} 
+\markboth{Nomenclature}{Nomenclature} 
+\addcontentsline{toc}{chapter}{Nomenclature}  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MAIN DOCUMENT¨
+
+\null\newpage
+\cleardoublepage
+% Arabisk (vanlige tall) sidenummerering. Starter på side 1 igjen.
+\pagenumbering{arabic}
+
+% Inkluder alle de andre kildefilene:
+
+\input{Introduction}
+
+\input{Theory}
+
+\input{Method}
+
+\input{Results}
+
+\input{Conclusion}
+
+%\input{old_experiments}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BIBLIOGRAPHY
+
+% Bibliografi/referanseliste skal komme før appendiks
+
+%\todo[inline]{fiks citations}
+
+\bibliographystyle{unsrt}
+\bibliography{References}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APPENDIX
+
+% En latex-kommando for å si fra at kapitlene/seksjonene fra nå 
+% av skal nummereres med store bokstaver:
+\appendix
+\input{Appendix.tex}
+
+%\input{Appendix}
+
+% Indeks for rapporten. Ta bort prosenttegn hvis du vil ha det med.
+%\printindex
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END DOCUMENT
+
+% Avslutter dokumentet vårt:
+\end{document}
+
+% Local Variables:
+% TeX-master: "master"
+% End:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMMENTS
+
+% Chapters are to be labelled with prefix cpt.
+% Sections are to be labelled with prefix sec.
+% Sub- and subsubsections are to be labelled with prefix subsec.
+% Tables are to be labelled with prefix tbl.
+% Equations are to be labelled with prefix eq.
+% Algorithms are to be labelled with prefix alg.
+% Figures are to be labelled with prefix fig.

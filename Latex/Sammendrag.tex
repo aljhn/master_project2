@@ -1,0 +1,11 @@
+\chapter*{Sammendrag}
+%Same as Abstract, however in Norwegian 
+\begin{otherlanguage}{norsk}
+
+Å modellere dynamiske systemer eksplisitt vil føre til modeller som er like nøykatige som antagelsene som gikk inn i modelleringen. Mange fysiske lover er nyttige modelleringsverktøy for mange bruksområder, men er ikke alltid perfekte. Å bruke maskinlæringsmetoder for å lære representasjoner av dynamiske systemer kan gjøres ved å bruke mye færre antakelser om systemet, men er avhengig av å ha nok data til å være nøyaktige. Ved å kombinere maskinlæringsmetoder med a priori informasjon gjør det mulig å lage modeller som er mer nøyaktige enn det man kunne fått til med hver metode separat.
+
+Hovedmotivasjonen for denne masteroppgaven er å undersøke metoder for å trene opp maskinlæringsmodeller på dynamiske systemer, samtidig som man tar med tidligere informasjon utredet fra første prinsipper for å se hvilke treningsutfordringer som eksisterer. Resultatene fra denne første undersøkelsen vil dermed brukes for å anvende de samme teknikkene på andre typer problemer som kan være spesielt vanskelig å løse med klassiske metoder.
+
+Maskinlæringsarkitekturen kalt Physics Informed Neural Networks (PINNs) er en ganske ny metode som med klarer å kombinere a priori informasjon om systemet med maskinlæring. Denne masteroppgaven bruker PINNs på flere forskjellige typer dynamiske systemer og undersøker hva som skal til for å trene maskinlæringsmodellene på riktig måte. Det har kommer mange forbedringer til den mest grunnleggende treningsmetoden for PINNs, og det å legge til kausalitet i treningen har vist å gi bedre resultater i mange tilfeller. Den har også brukt PINNs med suksess for å oppdage dynamiske systemer ved å starte fra en ufullstendig ligning, både der ligningen er kjent men at parameterverdier er ukjente, i tillegg til der det er et ukjent ledd i ligningen selv. Til slutt blir kunnskap om dynamiske systemer kombinert med maskinlæringsmetoder for å løse optimale kontrollproblemer med PDEer, samt kombinasjoner med kausal trening.
+
+\end{otherlanguage}

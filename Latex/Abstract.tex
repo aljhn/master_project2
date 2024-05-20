@@ -1,0 +1,13 @@
+\chapter*{Abstract}
+%Why you are doing this work
+%What problem are you trying to solve
+%What is your main contribution
+%What kind of methods have you used
+%What kind of application
+%What are the main findings of the study
+
+Creating explicit models of dynamical systems leads to models that will be as accurate as their assumptions. Although many physical laws are still useful for certain use cases but may not be perfectly accurate. Using machine learning methods to learn representations of dynamical systems can be done using much fewer assumptions about the system, but is reliant on having enough data to be accurate. Combining machine learning methods with prior information makes it possible to create models that are more accurate than either method separately.
+
+The main motivation of this master project is to investigate methods of training machine learning models on dynamical systems, while also incorporating prior information derived from first principles to see what challenges exist. This initial investigation is then used to apply the same techniques for other types of problems that can be especially difficult to solve using classical methods.
+
+The machine learning architecture called Physics Informed Neural Networks (PINNs) is a recent method that can successfully merge prior system information with data-driven machine learning. This master project applies PINNs to multiple different types of dynamical systems and investigates what it takes to properly train the machine learning models. There has been many improvements to the basic PINN training method, and introducing causality when training has been shown to give improved results in many cases. It also used PINNs successfully to discover dynamical systems starting from an incomplete equation, both where the equation is known but the parameter values are unknown, as well as the case where there is an unknown term in the equation itself. Finally, knowledge of dynamical systems is then combined with machine learning methods to solve optimal control problems on PDEs, as well as combinations with causal training.

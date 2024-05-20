@@ -1,0 +1,26 @@
+\chapter{Conclusion and Further Work}\label{cpt:conclusions}
+%Summarize in bullet points how your work answers the research questions and hence realizes all the aforementioned objectives.
+
+\section{Conclusion}
+
+Physics informed neural networks seem to work well for learning output trajectories from both ODEs and PDEs, provided that there is enough data and enough computational effort spent during the training. Data-driven discovery of unknown parameters also seemed to work well, as long as enough data was provided. PINNs are overall a natural choice for incorporating prior knowledge about system dynamics into a machine learning framework. Discovering unknown terms of an equation from data is also another problem where the PINN approach can work relatively well.
+
+Applying PINNs for more advanced problems can also work well, especially by also incorporating the various enhancements to the training process. This can also lead to an increased computational complexity, but can give much better results. This might not necessarily be worth using for simply solving PDEs numerically, as traditional numerical methods will outperform this both computationally and accurately. However, adding causality to solving optimal control problems gave much better results than not using it. Some of the other improvements like the modified network structure doesn't seem to have any disadvantages when used, and can always be applied. Fourier embeddings are very useful when the problem has a periodic boundary, not so useful if not. 
+
+%\begin{itemize}
+%    \item Conclusion 1
+%    \item Conclusion 2
+%    \item Conclusion 3
+%\end{itemize}
+
+\section{Future Work}
+
+The current method of validating the trained PINNs is not very robust. A better way than visually comparing can be to implement numerical PDE solvers to compare against. An alternative is to compare against a dataset sampled from either a real system or another numerical solver. The current data being used should also be augmented with some random noise to better simulate sensors and make the overall experiments more realistic. However, when learning symbolic representations for unknown systems or new control policies it can be much harder to verify the results even numerically.
+
+An alternative PINN framework based on discretizing the dynamics in a similar way to the finite difference numerical PDE method was also described by the original authors \cite{pinn1}. The actual discretization is based on Runge-Kutta numerical methods for ODEs, which are much more accurate compared to a simple finite difference. The purpose of this framework was to avoid the curse of dimensionality by reducing the number of collocation points, which allows for faster training. Discretized PINN models could be worth exploring further.
+
+Using PINNs for data-driven discovery works well for systems where the expression for the dynamics is known, but with unknown parameter values. Modeling real systems from first principles relies on making assumptions, which can lead to model inaccuracies. This is also true when using this symbolic approach as the input variables must be set explicitly, either based on prior information or a guess. In the ideal case, redundant input variables would not be used by the trained network, but neural networks can be unpredictable and possibly overfit on these variables in a way that is not physically accurate but still causes the training loss to decrease. An interesting experiment can be to treat the set of input variables as a hyperparameter and then perform hyperparameter optimization on this set. By choosing from this optimization, there is a higher chance of finding the most accurate true expression.
+
+Using PINNs for optimal control has shown to be a very flexible framework for different types of control problems. This master thesis has shown experiments on some types, but many other problems can be formulated and experimented on with PINNs. Another thing that should be done is verify the learned control policies by solving the same problem numerically using the learned and freezed control policy. Validating this on some simpler problems gives some evidence that the method works, which can then be extrapolated to more complicated problems.
+
+Some more future work could be to combine these two methods in order to do optimal control of systems with partially unknown dynamics. It could be possible to either do it in two stages, where first the unknown term is learned symbolically based on some dataset of the true system. This symbolic term can then be added to the optimal control PINN when learning the control policy. It might also be possible to do both of these in a single step by adding the symbolic network directly to the optimal control PINN problem, but this will most likely be too difficult to learn with neural networks directly and still learn something accurate. Using PINNs to learn unknown terms could also be combined with model predictive control in the way described by \cite{pinncontroldynamical}. All of these problem setups can be improved by adding causality and other training improvements.
